@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ocfcore/cmd/rc/cmd"
+	"ocfcore/bin/core/cmd"
 	"ocfcore/internal/common"
 )
 

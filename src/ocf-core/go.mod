@@ -27,6 +27,12 @@ require (
 )
 
 require (
+	github.com/minio/highwayhash v1.0.2 // indirect
+	github.com/nats-io/jwt/v2 v2.4.1 // indirect
+	golang.org/x/time v0.3.0 // indirect
+)
+
+require (
 	aead.dev/minisign v0.2.0 // indirect
 	ariga.io/atlas v0.12.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
@@ -123,6 +129,10 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
+	github.com/nats-io/nats-server/v2 v2.9.19
+	github.com/nats-io/nats.go v1.27.1 // indirect
+	github.com/nats-io/nkeys v0.4.4 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.10.0 // indirect
 	github.com/opencontainers/runtime-spec v1.0.2 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect

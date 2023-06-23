@@ -5,6 +5,7 @@ import (
 	"ocfcore/internal/common"
 	"ocfcore/internal/server/auth"
 	"ocfcore/internal/server/p2p"
+	"ocfcore/internal/server/queue"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -52,6 +53,7 @@ func StartServer() {
 			common.Logger.Error("http.Serve: %s", err)
 		}
 	}()
+	queue.StartQueueServer()
 	wg.Wait()
 	err := r.Run("0.0.0.0:" + viper.GetString("port"))
 	if err != nil {

@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"ocfcore/internal/common"
 	"os"
 	"path"
-	"ocfcore/internal/common"
 	"strconv"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -14,9 +14,9 @@ import (
 )
 
 var cfgFile string
-var rooocfcored = &cobra.Command{
+var rootcmd = &cobra.Command{
 	Use:   "ocfcore",
-	Short: "ocfcore - Tom's Cluster Manager",
+	Short: "ocfcore",
 	Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return initConfig(cmd)
@@ -31,11 +31,11 @@ var rooocfcored = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
-	rooocfcored.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.together/cfg.yaml)")
-	rooocfcored.AddCommand(starocfcored)
-	rooocfcored.AddCommand(versionCmd)
-	rooocfcored.AddCommand(updateCmd)
-	rooocfcored.AddCommand(clusterCmd)
+	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.together/cfg.yaml)")
+	rootcmd.AddCommand(starocfcored)
+	rootcmd.AddCommand(versionCmd)
+	rootcmd.AddCommand(updateCmd)
+	rootcmd.AddCommand(clusterCmd)
 	clusterCmd.AddCommand(acquireCmd)
 }
 
@@ -62,6 +62,7 @@ func initConfig(cmd *cobra.Command) error {
 		viper.SetDefault("port", defaultConfig.Port)
 		viper.SetDefault("name", defaultConfig.Name)
 		viper.SetDefault("p2p", defaultConfig.P2p)
+		viper.SetDefault("vacuum.interval", defaultConfig.Vacuum.Interval)
 		configPath := path.Join(home, ".tom", "cfg.yaml")
 		err = os.MkdirAll(path.Dir(configPath), os.ModePerm)
 		if err != nil {
@@ -105,7 +106,7 @@ func initConfig(cmd *cobra.Command) error {
 }
 
 func Execute() {
-	if err := rooocfcored.Execute(); err != nil {
+	if err := rootcmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
