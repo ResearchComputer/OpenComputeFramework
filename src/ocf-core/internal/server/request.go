@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+	"encoding/json"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/server/queue"
 
@@ -15,12 +15,17 @@ func InferenceRequest(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	jsonRequest, err := json.Marshal(request)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 	topic := "inference:" + request.UniqueModelName
-	msg, err := queue.Publish(topic, []byte(fmt.Sprintf("%s", request)))
+	msg, err := queue.Publish(topic, jsonRequest)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	// wait until the inference is done
-	c.JSON(200, gin.H{"message": "ok", "data": msg})
+	c.JSON(200, gin.H{"message": "ok", "data": string(msg.Data)})
 }
