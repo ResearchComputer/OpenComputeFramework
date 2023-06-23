@@ -55,15 +55,16 @@ func initConfig(cmd *cobra.Command) error {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		viper.SetConfigFile(path.Join(home, ".tom", "cfg.yaml"))
+		viper.SetConfigFile(path.Join(home, ".ocf", "cfg.yaml"))
 	}
 	if err = viper.ReadInConfig(); err != nil {
 		viper.SetDefault("path", defaultConfig.Path)
 		viper.SetDefault("port", defaultConfig.Port)
 		viper.SetDefault("name", defaultConfig.Name)
-		viper.SetDefault("p2p", defaultConfig.P2p)
+		viper.SetDefault("p2p.port", defaultConfig.P2p.port)
 		viper.SetDefault("vacuum.interval", defaultConfig.Vacuum.Interval)
-		configPath := path.Join(home, ".tom", "cfg.yaml")
+		viper.SetDefault("queue.port", defaultConfig.Queue.Port)
+		configPath := path.Join(home, ".ocf", "cfg.yaml")
 		err = os.MkdirAll(path.Dir(configPath), os.ModePerm)
 		if err != nil {
 			common.Logger.Error("Could not create config directory", "error", err)

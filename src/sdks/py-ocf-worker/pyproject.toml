@@ -1,0 +1,26 @@
+[project]
+name = "ocfworker"
+version = "0.0.3"
+authors = [
+  { name="Xiaozhe Yao", email="askxzyao@gmail.com" },
+]
+description = "Open Compute Framework for Serving Inference Requests in a Decentralized Manner."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  'nats-py',
+]
+
+[project.urls]
+"Homepage" = "https://github.com/autoai-org/ocf"
+"Bug Tracker" = "https://github.com/autoai-org/ocf/issues"
+
+[tool.poetry]
+packages = [
+    { include = "client" },
+]

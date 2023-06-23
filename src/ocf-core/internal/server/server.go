@@ -45,6 +45,10 @@ func StartServer() {
 			ocfcoreThrottle.GET("/instructions/:workerId", GetWorkloadInstructions)
 			ocfcoreThrottle.POST("/cluster/nodes", AddClusterNode)
 		}
+		ocfcoreRequest := v1.Group("/request")
+		{
+			ocfcoreRequest.POST("/inference", InferenceRequest)
+		}
 	}
 	p2plistener := p2p.P2PListener()
 	go func() {
