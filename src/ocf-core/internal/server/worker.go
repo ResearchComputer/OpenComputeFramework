@@ -3,8 +3,11 @@ package server
 import (
 	"net/http"
 	"ocfcore/internal/common"
+	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/profiler"
+	"ocfcore/internal/server/p2p"
+	"ocfcore/internal/server/queue"
 	"strconv"
 	"time"
 
@@ -43,6 +46,7 @@ type WorkerStatusResponse struct {
 }
 
 var workerHub WorkerHub
+var workerloadTable structs.WorkloadTable
 
 func (wh WorkerHub) Exists(workerID string) bool {
 	for _, worker := range wh.Workers {
@@ -54,7 +58,15 @@ func (wh WorkerHub) Exists(workerID string) bool {
 }
 
 func GetWorkerHub(c *gin.Context) {
-	c.JSON(200, workerHub)
+	c.JSON(http.StatusOK, workerHub)
+}
+
+func GetConnections(c *gin.Context) {
+	conn, err := queue.GetQueueStatus()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	c.JSON(http.StatusOK, conn)
 }
 
 func GetWorkerStatus(c *gin.Context) {
@@ -147,6 +159,23 @@ func (s *WorkerService) UpdateServingStatus(WorkerID string, Serving string) {
 	for i, worker := range workerHub.Workers {
 		if worker.WorkerID == WorkerID {
 			workerHub.Workers[i].Serving = Serving
+		}
+	}
+}
+
+func UpdateGlobalWorkloadTable() {
+	node := p2p.GetP2PNode()
+	peers := node.Peerstore().Peers()
+	for _, peer := range peers {
+		if peer.String() != node.ID().String() {
+			// make a request to the peer to get the available workload
+			providedServices, err := requests.ReadProvidedService(peer.String())
+			if err != nil {
+				common.Logger.Debug("Error while reading provided service", "error", err)
+			}
+			for _, service := range providedServices {
+				workerloadTable.Add(service, peer.String())
+			}
 		}
 	}
 }

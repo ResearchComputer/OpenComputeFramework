@@ -14,7 +14,7 @@ func StartTicker() {
 	_, err := s.Every(viper.GetInt("vacuum.interval")).Seconds().Do(func() {
 		common.Logger.Debug("Vacuuming...")
 		server.DisconnectionDetection(time.Duration(viper.GetInt("vacuum.tolerance")) * time.Second)
-
+		server.UpdateGlobalWorkloadTable()
 	})
 	if err != nil {
 		common.Logger.Error(err)

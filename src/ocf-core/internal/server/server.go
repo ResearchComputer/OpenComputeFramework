@@ -26,6 +26,7 @@ func StartServer() {
 			ocfcoreStatus.GET("/workers", GetWorkerHub)
 			ocfcoreStatus.GET("/matchmaking", matchmakingStatus)
 			ocfcoreStatus.GET("/summary", GetSummary)
+			ocfcoreStatus.GET("/connections", GetConnections)
 		}
 		ocfcoreWs := v1.Group("/ws")
 		{

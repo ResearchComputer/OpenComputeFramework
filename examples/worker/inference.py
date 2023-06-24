@@ -1,5 +1,6 @@
 import asyncio
 from nats.aio.client import Client as NATS
+
 async def run(loop):
     nc = NATS()
 
