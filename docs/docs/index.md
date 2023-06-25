@@ -1,17 +1,15 @@
-# Welcome to MkDocs
+# Welcome to Open Compute Framework
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Open Compute Framework is a framework for decentralized computing. 
 
-## Commands
+## Why Decentralized Computing?
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+In many cases, a single individual or organization won't have enough resources to run a large-scale computing task. We were facing two main challenges in the past:
 
-## Project layout
+* Running LLM inference at a large scale is prohibitively expensive, especially when we need to run many different models on a large benchmark dataset.
+* We were hosting a generic benchmark and inviting participants, which exihibits a bursty workload. We need to pay for the idle time when the benchmark is not running.
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+We believe that decentralized computing can help us solve these problems, in the following ways:
+
+* We can leverage the computing resources from the community, and run the benchmark at a large scale, such that we avoid the cost of running the benchmark on our own. Think about the SETI@home project.
+* We also avoid single point of failure, as the computing resources are distributed across the globe.

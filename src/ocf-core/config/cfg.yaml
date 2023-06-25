@@ -1,0 +1,10 @@
+name: relay
+p2p: {}
+path: ""
+port: "8092"
+queue:
+    port: "8094"
+vacuum:
+    interval: 60
+bootstrap:
+    mode: "standalone"
