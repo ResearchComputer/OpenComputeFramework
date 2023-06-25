@@ -61,7 +61,7 @@ func initConfig(cmd *cobra.Command) error {
 		viper.SetDefault("path", defaultConfig.Path)
 		viper.SetDefault("port", defaultConfig.Port)
 		viper.SetDefault("name", defaultConfig.Name)
-		viper.SetDefault("p2p.port", defaultConfig.P2p.port)
+		viper.SetDefault("p2p", defaultConfig.P2p)
 		viper.SetDefault("vacuum.interval", defaultConfig.Vacuum.Interval)
 		viper.SetDefault("queue.port", defaultConfig.Queue.Port)
 		configPath := path.Join(home, ".ocf", "cfg.yaml")

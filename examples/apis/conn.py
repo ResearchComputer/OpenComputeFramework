@@ -7,9 +7,10 @@ def get_conn():
     return resp.text
 
 def get_global_view():
-    url = f"{RELAY_URL}/api/v1/proxy/{HOST_ID}/api/v1/status/global_view"
+    url = f"{RELAY_URL}/api/v1/status/table"
     resp = requests.get(url)
     return resp.text
 
 if __name__ == "__main__":
     print(get_conn())
+    print(get_global_view())

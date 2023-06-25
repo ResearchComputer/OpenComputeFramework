@@ -69,6 +69,10 @@ func GetConnections(c *gin.Context) {
 	c.JSON(http.StatusOK, conn)
 }
 
+func GetWorkloadTable(c *gin.Context) {
+	c.JSON(http.StatusOK, workerloadTable)
+}
+
 func GetWorkerStatus(c *gin.Context) {
 	workerID := c.Param("workerId")
 	metricName := c.Param("metric")
@@ -167,6 +171,7 @@ func UpdateGlobalWorkloadTable() {
 	node := p2p.GetP2PNode()
 	peers := node.Peerstore().Peers()
 	for _, peer := range peers {
+		common.Logger.Info("peer: ", peer.String())
 		if peer.String() != node.ID().String() {
 			// make a request to the peer to get the available workload
 			providedServices, err := requests.ReadProvidedService(peer.String())
@@ -174,6 +179,7 @@ func UpdateGlobalWorkloadTable() {
 				common.Logger.Debug("Error while reading provided service", "error", err)
 			}
 			for _, service := range providedServices {
+				common.Logger.Info("peer: ", peer.String(), " provides service: ", service)
 				workerloadTable.Add(service, peer.String())
 			}
 		}

@@ -39,6 +39,9 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 					if err != nil {
 						continue
 					}
+					// add to peerstore
+					common.Logger.Info("Connected to: ", p)
+					h.Peerstore().AddAddrs(p.ID, p.Addrs, time.Hour)
 				}
 			}
 		}

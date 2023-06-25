@@ -10,7 +10,7 @@ def inference(i):
             'prompt': "Hello!"
         }
     })
-    print(resp.json())
+    print(resp.text)
     return resp.text
 
 if __name__ == "__main__":
