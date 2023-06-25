@@ -27,10 +27,6 @@ func ForwardHandler(c *gin.Context) {
 	}
 	tr := &http.Transport{}
 	node := p2p.GetP2PNode()
-	// print peers
-	for _, p := range node.Peerstore().Peers() {
-		fmt.Println("peer: ", p)
-	}
 	tr.RegisterProtocol("libp2p", p2phttp.NewTransport(node))
 
 	target := url.URL{

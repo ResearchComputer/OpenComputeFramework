@@ -10,6 +10,7 @@ import (
 	"ocfcore/internal/server/p2p"
 	"ocfcore/internal/server/queue"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,7 +48,15 @@ type WorkerStatusResponse struct {
 }
 
 var workerHub WorkerHub
-var workerloadTable structs.WorkloadTable
+var workloadTable *structs.WorkloadTable
+var once sync.Once
+
+func GlobalWorkloadTable() *structs.WorkloadTable {
+	once.Do(func() {
+		workloadTable = &structs.WorkloadTable{}
+	})
+	return workloadTable
+}
 
 func (wh WorkerHub) Exists(workerID string) bool {
 	for _, worker := range wh.Workers {
@@ -71,7 +80,7 @@ func GetConnections(c *gin.Context) {
 }
 
 func GetWorkloadTable(c *gin.Context) {
-	c.JSON(http.StatusOK, workerloadTable)
+	c.JSON(http.StatusOK, GlobalWorkloadTable())
 }
 
 func GetWorkerStatus(c *gin.Context) {
@@ -171,20 +180,30 @@ func (s *WorkerService) UpdateServingStatus(WorkerID string, Serving string) {
 func UpdateGlobalWorkloadTable() {
 	node := p2p.GetP2PNode()
 	peers := node.Peerstore().Peers()
+	table := GlobalWorkloadTable()
 	for _, peer := range peers {
-		common.Logger.Info("peer: ", peer.String())
 		if peer.String() != node.ID().String() {
 			// make a request to the peer to get the available workload
 			providedServices, err := requests.ReadProvidedService(peer.String())
 			if err != nil {
 				common.Logger.Debug("Error while reading provided service", "error", err)
 			}
+			// update the workload table
 			for _, service := range providedServices {
-				common.Logger.Info("peer: ", peer.String(), " provides service: ", service)
-				workerloadTable.Add(service, peer.String())
-				// print workerloadTable
-				fmt.Println(workerloadTable)
+				exists := false
+				for _, workload := range table.Workloads {
+					if workload.WorkloadID == service {
+						workload.Providers = append(workload.Providers, peer.String())
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					row := structs.WorkloadTableRow{WorkloadID: service, Providers: []string{peer.String()}}
+					table.Workloads = append(table.Workloads, row)
+				}
 			}
+			fmt.Println(table)
 		}
 	}
 }

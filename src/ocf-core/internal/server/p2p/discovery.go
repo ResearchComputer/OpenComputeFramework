@@ -40,7 +40,6 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 					}
 				}
 				if h.Network().Connectedness(p.ID) == network.Connected {
-					common.Logger.Info("Connected to: ", p.ID)
 					h.Peerstore().AddAddrs(p.ID, p.Addrs, peerstore.PermanentAddrTTL)
 				}
 			}
