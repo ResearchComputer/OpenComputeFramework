@@ -8,6 +8,7 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peerstore"
 	routing "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 )
 
@@ -29,21 +30,18 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 				common.Logger.Error(err)
 			}
 			for p := range peers {
-				common.Logger.Debug("Found peer: ", p)
 				if p.ID == h.ID() {
 					continue
 				}
-				common.Logger.Debug("Peer connectedness: ", h.Network().Connectedness(p.ID))
 				if h.Network().Connectedness(p.ID) != network.Connected {
 					_, err = h.Network().DialPeer(ctx, p.ID)
-					common.Logger.Info("Dialing to: ", p)
-					common.Logger.Error(err)
 					if err != nil {
 						continue
 					}
-					// add to peerstore
-					common.Logger.Info("Connected to: ", p)
-					h.Peerstore().AddAddrs(p.ID, p.Addrs, time.Hour)
+				}
+				if h.Network().Connectedness(p.ID) == network.Connected {
+					common.Logger.Info("Connected to: ", p.ID)
+					h.Peerstore().AddAddrs(p.ID, p.Addrs, peerstore.PermanentAddrTTL)
 				}
 			}
 		}

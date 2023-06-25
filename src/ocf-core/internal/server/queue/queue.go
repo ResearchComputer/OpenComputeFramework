@@ -33,10 +33,11 @@ func StartQueueServer() {
 	if err != nil {
 		panic(err)
 	}
+	common.Logger.Info("Queue server listening on port: ", viper.GetInt("queue.port"))
 }
 
 func Publish(topic string, data []byte) (*nats.Msg, error) {
-	common.Logger.Info("Publishing to queue", "topic", topic, "data", string(data))
+	common.Logger.Debug("Publishing to queue", "topic", topic, "data", string(data))
 	msg, err := natsConn.Request(topic, data, 10*time.Second)
 	return msg, err
 }

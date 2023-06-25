@@ -6,6 +6,7 @@ import (
 	"io"
 	mrand "math/rand"
 	"ocfcore/internal/common"
+	"sync"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -16,18 +17,20 @@ import (
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 )
 
-var P2PNode host.Host
+var P2PNode *host.Host
+var once sync.Once
 
 func GetP2PNode() host.Host {
-	if P2PNode == nil {
+	once.Do(func() {
 		ctx := context.Background()
 		var err error
-		P2PNode, err = newHost(ctx, 0)
+		host, err := newHost(ctx, 0)
+		P2PNode = &host
 		if err != nil {
 			panic(err)
 		}
-	}
-	return P2PNode
+	})
+	return *P2PNode
 }
 
 func newHost(ctx context.Context, seed int64) (host.Host, error) {
