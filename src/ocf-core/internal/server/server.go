@@ -14,8 +14,8 @@ import (
 
 func StartServer() {
 	var wg sync.WaitGroup
-	r := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default()
 	r.Use(beforeResponse())
 	r.Use(gin.Recovery())
 	v1 := r.Group("/api/v1")

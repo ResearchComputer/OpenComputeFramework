@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"ocfcore/internal/common"
 	"ocfcore/internal/common/requests"
@@ -181,6 +182,8 @@ func UpdateGlobalWorkloadTable() {
 			for _, service := range providedServices {
 				common.Logger.Info("peer: ", peer.String(), " provides service: ", service)
 				workerloadTable.Add(service, peer.String())
+				// print workerloadTable
+				fmt.Println(workerloadTable)
 			}
 		}
 	}

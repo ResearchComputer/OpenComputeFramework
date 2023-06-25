@@ -24,18 +24,20 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-
 			peers, err := routingDiscovery.FindPeers(ctx, rendezvous)
 			if err != nil {
 				common.Logger.Error(err)
 			}
-
 			for p := range peers {
+				common.Logger.Debug("Found peer: ", p)
 				if p.ID == h.ID() {
 					continue
 				}
+				common.Logger.Debug("Peer connectedness: ", h.Network().Connectedness(p.ID))
 				if h.Network().Connectedness(p.ID) != network.Connected {
 					_, err = h.Network().DialPeer(ctx, p.ID)
+					common.Logger.Info("Dialing to: ", p)
+					common.Logger.Error(err)
 					if err != nil {
 						continue
 					}

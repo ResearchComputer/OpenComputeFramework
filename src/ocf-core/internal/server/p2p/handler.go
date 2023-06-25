@@ -17,7 +17,7 @@ func P2PListener() net.Listener {
 	host := GetP2PNode()
 	var dhtc *dht.IpfsDHT
 	var err error
-	if viper.GetString("bootstrap.maddr") == "standalone" {
+	if viper.GetString("bootstrap.mode") == "standalone" {
 		common.Logger.Info("standalone mode")
 		dhtc, err = NewDHT(ctx, host, []multiaddr.Multiaddr{})
 	} else {
