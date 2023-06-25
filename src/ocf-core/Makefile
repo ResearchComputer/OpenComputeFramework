@@ -1,4 +1,3 @@
-include .env
 export
 OS = $(shell uname | tr A-Z a-z)
 export PATH := $(abspath bin/):${PATH}
