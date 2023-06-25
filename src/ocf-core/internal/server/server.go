@@ -51,7 +51,8 @@ func StartServer() {
 		}
 		ocfcoreRequest := v1.Group("/request")
 		{
-			ocfcoreRequest.POST("/inference", InferenceRequest)
+			ocfcoreRequest.POST("/inference", AutoInferenceRequest)
+			ocfcoreRequest.POST("/_inference", InferenceRequest)
 		}
 	}
 	p2plistener := p2p.P2PListener()

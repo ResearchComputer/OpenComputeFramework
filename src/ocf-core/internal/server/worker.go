@@ -80,6 +80,8 @@ func GetConnections(c *gin.Context) {
 }
 
 func GetWorkloadTable(c *gin.Context) {
+	table := GlobalWorkloadTable()
+	fmt.Println(table)
 	c.JSON(http.StatusOK, GlobalWorkloadTable())
 }
 
@@ -181,29 +183,20 @@ func UpdateGlobalWorkloadTable() {
 	node := p2p.GetP2PNode()
 	peers := node.Peerstore().Peers()
 	table := GlobalWorkloadTable()
+	var err error
+	var providedServices []string
 	for _, peer := range peers {
 		if peer.String() != node.ID().String() {
 			// make a request to the peer to get the available workload
-			providedServices, err := requests.ReadProvidedService(peer.String())
-			if err != nil {
-				common.Logger.Debug("Error while reading provided service", "error", err)
-			}
-			// update the workload table
-			for _, service := range providedServices {
-				exists := false
-				for _, workload := range table.Workloads {
-					if workload.WorkloadID == service {
-						workload.Providers = append(workload.Providers, peer.String())
-						exists = true
-						break
-					}
-				}
-				if !exists {
-					row := structs.WorkloadTableRow{WorkloadID: service, Providers: []string{peer.String()}}
-					table.Workloads = append(table.Workloads, row)
-				}
-			}
-			fmt.Println(table)
+			providedServices, err = requests.ReadProvidedService(peer.String())
+		} else {
+			providedServices, err = queue.GetProvidedService()
+		}
+		if err != nil {
+			common.Logger.Debug("Error while reading provided service", "error", err)
+		}
+		for _, service := range providedServices {
+			*workloadTable = *table.Add(service, peer.String())
 		}
 	}
 }

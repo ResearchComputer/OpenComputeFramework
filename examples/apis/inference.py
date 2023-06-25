@@ -13,6 +13,17 @@ def inference(i):
     print(resp.text)
     return resp.text
 
+def global_inference(i):
+    url = f"{RELAY_URL}/api/v1/request/inference"
+    resp = requests.post(url, json={
+        'model_name': 'openlm-research/open_llama_7b',
+        'params': {
+            'prompt': "Hello!"
+        }
+    })
+    print(resp.json())
+    return resp.text
+
 if __name__ == "__main__":
-    with Pool(5) as p:
-        p.map(inference, range(5))
+    with Pool(1) as p:
+        p.map(global_inference, range(5))

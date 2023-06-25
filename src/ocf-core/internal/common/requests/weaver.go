@@ -50,7 +50,6 @@ func ReadProvidedService(peerId string) ([]string, error) {
 		common.Logger.Error("Error while reading response body", "error", err)
 		return nil, err
 	}
-	fmt.Println(string(b))
 	var conns ns.Connz
 	json.Unmarshal(b, &conns)
 	var providedService []string

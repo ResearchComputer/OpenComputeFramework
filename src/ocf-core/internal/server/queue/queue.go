@@ -50,3 +50,19 @@ func GetQueueStatus() (*server.Connz, error) {
 	conn, err := natsServer.Connz(&server.ConnzOptions{Subscriptions: true, Offset: 1})
 	return conn, err
 }
+
+func GetProvidedService() ([]string, error) {
+	if natsServer == nil {
+		common.Logger.Info("NATS server not started")
+		return nil, errors.New("NATS server not started")
+	}
+	conn, err := natsServer.Connz(&server.ConnzOptions{Subscriptions: true, Offset: 1})
+	if err != nil {
+		return nil, err
+	}
+	var providedService []string
+	for _, c := range conn.Conns {
+		providedService = append(providedService, c.Subs...)
+	}
+	return providedService, nil
+}

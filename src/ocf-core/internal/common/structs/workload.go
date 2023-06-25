@@ -29,16 +29,25 @@ type WorkloadTable struct {
 	Workloads []WorkloadTableRow `json:"workloads"`
 }
 
-func (wt WorkloadTable) Add(workloadID string, provider string) {
+func (wt WorkloadTable) Add(workloadID string, provider string) *WorkloadTable {
 	for _, workload := range wt.Workloads {
 		if workload.WorkloadID == workloadID {
 			workload.Providers = append(workload.Providers, provider)
-			return
+			return &wt
 		}
 	}
 	row := WorkloadTableRow{WorkloadID: workloadID, Providers: []string{provider}}
-	// todo(xiaozhe): figure out why linter complains about this
 	wt.Workloads = append(wt.Workloads, row)
+	return &wt
+}
+
+func (wt WorkloadTable) Find(workloadID string) *WorkloadTableRow {
+	for _, workload := range wt.Workloads {
+		if workload.WorkloadID == workloadID {
+			return &workload
+		}
+	}
+	return nil
 }
 
 type NatsConnections struct {
