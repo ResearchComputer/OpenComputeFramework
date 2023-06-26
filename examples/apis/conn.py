@@ -12,5 +12,5 @@ def get_global_view():
     return resp.text
 
 if __name__ == "__main__":
-    print(get_conn())
+    # print(get_conn())
     print(get_global_view())

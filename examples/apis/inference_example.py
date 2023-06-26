@@ -1,18 +1,23 @@
+import json
 import requests
 from multiprocessing import Pool
 
 URL = "https://inference.autoai.dev/api/v1/request/inference"
 
-def global_inference(i):
+def inference():
     resp = requests.post(URL, json={
-        'model_name': 'togethercomputer/RedPajama-INCITE-7B-Base',
+        'model_name': 'togethercomputer/RedPajama-INCITE-7B-Chat',
         'params': {
-            'prompt': "Alan Turing was a "
+            'prompt': "<human>: tell me about computer science?\n<bot>: ",
+            'max_tokens': 32,
+            'temperature': 0.7,
+            'top_p': 1.0,
+            'top_k': 40,
         }
     })
-    print(resp.json())
-    return resp.text
+    resp = json.loads(resp.json()['data'])
+    print(resp)
+    return resp
 
 if __name__ == "__main__":
-    with Pool(1) as p:
-        p.map(global_inference, range(1))
+    inference()

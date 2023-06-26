@@ -13,3 +13,11 @@ We believe that decentralized computing can help us solve these problems, in the
 
 * We can leverage the computing resources from the community, and run the benchmark at a large scale, such that we avoid the cost of running the benchmark on our own. Think about the SETI@home project.
 * We also avoid single point of failure, as the computing resources are distributed across the globe.
+
+## How Does It Work?
+
+The framework is built on top of [LibP2P](https://libp2p.io/), which is a modular networking stack.
+
+## Demo
+
+We run a public, free instance of OCF as the inference API. [Status Page](https://ocfstatus.autoai.dev).
