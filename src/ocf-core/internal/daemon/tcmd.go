@@ -8,7 +8,6 @@ import (
 )
 
 func Start() {
-	common.Logger.Info("DSN: " + common.BuildSecret.SentryDSN)
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: common.BuildSecret.SentryDSN,
 		// Set TracesSampleRate to 1.0 to capture 100%

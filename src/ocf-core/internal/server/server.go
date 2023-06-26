@@ -13,6 +13,7 @@ import (
 )
 
 func StartServer() {
+	PrintWelcomeMessage()
 	var wg sync.WaitGroup
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()

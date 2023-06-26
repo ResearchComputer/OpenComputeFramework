@@ -15,3 +15,17 @@ type WarmedMachine struct {
 	Life      time.Duration `json:"life"`
 	StartedAt int64         `json:"started_at"`
 }
+
+type GPUSpec struct {
+	Name       string `json:"name"`
+	Memory     int64  `json:"memory"`
+	FreeMemory int64  `json:"memory_free"`
+	UsedMemory int64  `json:"memory_used"`
+}
+
+type NodeStatus struct {
+	ClientID int       `json:"client_id"`
+	Status   string    `json:"status"`
+	Specs    []GPUSpec `json:"gpus"`
+	Service  string    `json:"service"`
+}

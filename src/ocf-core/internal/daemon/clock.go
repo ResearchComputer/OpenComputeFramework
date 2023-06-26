@@ -9,9 +9,17 @@ import (
 	"github.com/spf13/viper"
 )
 
+var firstRun = true
+
 func StartTicker() {
 	s := gocron.NewScheduler(time.UTC)
+
 	_, err := s.Every(viper.GetInt("vacuum.interval")).Seconds().Do(func() {
+		if firstRun {
+			// skip the first run to wait until the server is ready
+			firstRun = false
+			return
+		}
 		common.Logger.Debug("Vacuuming...")
 		server.DisconnectionDetection(time.Duration(viper.GetInt("vacuum.tolerance")) * time.Second)
 		server.UpdateGlobalWorkloadTable()
