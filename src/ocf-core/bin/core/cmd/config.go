@@ -26,6 +26,6 @@ var defaultConfig = TOMConfig{
 	Port:   "8092",
 	Name:   "relay",
 	P2p:    TOMP2PConfig{port: "8093"},
-	Vacuum: TOMVaccumConfig{Interval: 60},
+	Vacuum: TOMVaccumConfig{Interval: 10},
 	Queue:  QueueConfig{Port: "8094"},
 }

@@ -20,8 +20,7 @@ func StartTicker() {
 			firstRun = false
 			return
 		}
-		common.Logger.Debug("Vacuuming...")
-		server.DisconnectionDetection(time.Duration(viper.GetInt("vacuum.tolerance")) * time.Second)
+		server.DisconnectionDetection()
 		// todo(xiaozhe): disable this for now
 		// todo(xiaozhe): in future this will be managed more passively - each node monitors its own worker periodically and broadcast the status to the peers
 		// server.UpdateGlobalWorkloadTable()

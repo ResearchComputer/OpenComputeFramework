@@ -38,10 +38,17 @@ type NodeTable struct {
 func (lnt NodeTable) Update(node NodeStatus) *NodeTable {
 	for idx, n := range lnt.Nodes {
 		if n.ClientID == node.ClientID && n.PeerID == node.PeerID {
-			lnt.Nodes[idx] = node
+			if node.Status == "disconnected" {
+				lnt.Nodes = append(lnt.Nodes[:idx], lnt.Nodes[idx+1:]...)
+				return &lnt
+			} else if node.Status == "connected" {
+				lnt.Nodes[idx] = node
+			}
 			return &lnt
 		}
 	}
-	lnt.Nodes = append(lnt.Nodes, node)
+	if node.Status == "connected" {
+		lnt.Nodes = append(lnt.Nodes, node)
+	}
 	return &lnt
 }

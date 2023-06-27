@@ -69,7 +69,6 @@ func StartQueueServer() {
 }
 
 func Publish(topic string, data []byte) (*nats.Msg, error) {
-	common.Logger.Debug("Publishing to queue", "topic", topic, "data", string(data))
 	msg, err := natsConn.Request(topic, data, 10*time.Second)
 	return msg, err
 }
@@ -101,9 +100,6 @@ func SubscribeWorkerStatus() error {
 		}
 		nodeStatus.PeerID = p2p.GetP2PNode().ID().String()
 		table := NewNodeTable()
-		fmt.Println("Updating local node table")
-		fmt.Println(nodeStatus)
-		fmt.Println(table)
 		*lnt = *table.Update(nodeStatus)
 		go requests.BroadcastNodeStatus(nodeStatus)
 	})
@@ -125,4 +121,29 @@ func GetProvidedService() ([]string, error) {
 
 func UpdateNodeTable(nodeStatus structs.NodeStatus) {
 	*lnt = *NewNodeTable().Update(nodeStatus)
+}
+
+func RemoveDisconnectedNode() {
+	natsServer := NewNatsServer()
+	conn, err := natsServer.Connz(&server.ConnzOptions{Subscriptions: true, Offset: 1})
+	if err != nil {
+		common.Logger.Error("Failed to get connection status: ", err)
+		common.Logger.Error("If this persists, the node table will not be updated")
+		return
+	}
+	// for all nodes in lnt, check if they are still connected
+	for _, node := range lnt.Nodes {
+		connected := false
+		for _, c := range conn.Conns {
+			if c.Cid == uint64(node.ClientID) {
+				connected = true
+				break
+			}
+		}
+		if !connected {
+			// if not connected, remove from node table
+			node.Status = "disconnected"
+			*lnt = *NewNodeTable().Update(node)
+		}
+	}
 }

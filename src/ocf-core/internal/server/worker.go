@@ -2,11 +2,8 @@ package server
 
 import (
 	"ocfcore/internal/common"
-	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/profiler"
-	"ocfcore/internal/server/p2p"
-	"ocfcore/internal/server/queue"
 	"sync"
 
 	"github.com/gofrs/uuid"
@@ -110,28 +107,6 @@ func (s *WorkerService) UpdateServingStatus(WorkerID string, Serving string) {
 	for i, worker := range workerHub.Workers {
 		if worker.WorkerID == WorkerID {
 			workerHub.Workers[i].Serving = Serving
-		}
-	}
-}
-
-func UpdateGlobalWorkloadTable() {
-	node := p2p.GetP2PNode()
-	peers := node.Peerstore().Peers()
-	table := GlobalWorkloadTable()
-	var err error
-	var providedServices []string
-	for _, peer := range peers {
-		if peer.String() != node.ID().String() {
-			// make a request to the peer to get the available workload
-			providedServices, err = requests.ReadProvidedService(peer.String())
-		} else {
-			providedServices, err = queue.GetProvidedService()
-		}
-		if err != nil {
-			common.Logger.Debug("Error while reading provided service", "error", err)
-		}
-		for _, service := range providedServices {
-			*workloadTable = *table.Add(service, peer.String())
 		}
 	}
 }
