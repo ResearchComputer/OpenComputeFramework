@@ -133,18 +133,21 @@ func RemoveDisconnectedNode() {
 	}
 	// for all nodes in lnt, check if they are still connected
 	for _, node := range NewNodeTable().Nodes {
-		connected := false
-		for _, c := range conn.Conns {
-			if c.Cid == uint64(node.ClientID) {
-				connected = true
-				break
+		// if it is the current node, then continue
+		if node.PeerID == p2p.GetP2PNode().ID().String() {
+			connected := false
+			for _, c := range conn.Conns {
+				if c.Cid == uint64(node.ClientID) {
+					connected = true
+					break
+				}
 			}
-		}
-		if !connected {
-			// if not connected, remove from node table
-			node.Status = "disconnected"
-			*lnt = *NewNodeTable().Update(node)
-			go requests.BroadcastNodeStatus(node)
+			if !connected {
+				// if not connected, remove from node table
+				node.Status = "disconnected"
+				*lnt = *NewNodeTable().Update(node)
+				go requests.BroadcastNodeStatus(node)
+			}
 		}
 	}
 }

@@ -13,7 +13,7 @@ config = read_config(config_path)
 
 @app.command()
 def list(entity: str):
-    if entity == "nodes":
+    if entity == "node":
         pprint_nodes()
     else:
         print("[ERROR] Unknown: ", entity)
