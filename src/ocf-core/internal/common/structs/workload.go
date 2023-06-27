@@ -8,6 +8,7 @@ type AvailableWorkload struct {
 type NatsConnections struct {
 	ServerID string `json:"server_id"`
 }
+
 type LoadWorkLoadInstruction struct {
 	Workload        string            `json:"workload"`
 	Mode            string            `json:"mode"`

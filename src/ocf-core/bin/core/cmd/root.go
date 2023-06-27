@@ -31,7 +31,7 @@ var rootcmd = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
-	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ocf/cfg.yaml)")
+	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ocf/cfg.yaml)")
 	rootcmd.AddCommand(starocfcored)
 	rootcmd.AddCommand(versionCmd)
 	rootcmd.AddCommand(updateCmd)
@@ -55,7 +55,7 @@ func initConfig(cmd *cobra.Command) error {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		viper.SetConfigFile(path.Join(home, ".ocf", "cfg.yaml"))
+		viper.SetConfigFile(path.Join(home, ".config", "ocf", "cfg.yaml"))
 	}
 	if err = viper.ReadInConfig(); err != nil {
 		viper.SetDefault("path", defaultConfig.Path)
@@ -64,7 +64,7 @@ func initConfig(cmd *cobra.Command) error {
 		viper.SetDefault("p2p", defaultConfig.P2p)
 		viper.SetDefault("vacuum.interval", defaultConfig.Vacuum.Interval)
 		viper.SetDefault("queue.port", defaultConfig.Queue.Port)
-		configPath := path.Join(home, ".ocf", "cfg.yaml")
+		configPath := path.Join(home, ".config", "ocf", "cfg.yaml")
 		err = os.MkdirAll(path.Dir(configPath), os.ModePerm)
 		if err != nil {
 			common.Logger.Error("Could not create config directory", "error", err)

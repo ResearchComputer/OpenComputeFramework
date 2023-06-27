@@ -52,3 +52,13 @@ func (lnt NodeTable) Update(node NodeStatus) *NodeTable {
 	}
 	return &lnt
 }
+
+func (lnt NodeTable) FindProviders(service string) []string {
+	var providers []string
+	for _, n := range lnt.Nodes {
+		if n.Service == service {
+			providers = append(providers, n.PeerID)
+		}
+	}
+	return providers
+}

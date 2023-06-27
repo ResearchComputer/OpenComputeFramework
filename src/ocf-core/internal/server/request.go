@@ -47,16 +47,17 @@ func AutoInferenceRequest(c *gin.Context) {
 		return
 	}
 	// find workers
-	table := GlobalWorkloadTable()
+	table := queue.NewNodeTable()
 	topic := "inference:" + request.UniqueModelName
-	row := table.Find(topic)
-	if row == nil {
+	providers := table.FindProviders(topic)
+	if len(providers) == 0 {
 		c.JSON(500, gin.H{"error": "no worker available"})
 		return
 	}
+
 	// randomly pick a worker from the row
-	randomIndex := rand.Intn(len(row.Providers))
-	scapegoat := row.Providers[randomIndex]
+	randomIndex := rand.Intn(len(providers))
+	scapegoat := providers[randomIndex]
 	// now forward request to scapegoat
 	res, err := requests.ForwardInferenceRequest(scapegoat, request)
 	if err != nil {
