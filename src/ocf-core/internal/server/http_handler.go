@@ -34,11 +34,7 @@ func GetConnections(c *gin.Context) {
 }
 
 func GetWorkloadTable(c *gin.Context) {
-	c.JSON(http.StatusOK, GlobalWorkloadTable())
-}
-
-func GetWorkerTable(c *gin.Context) {
-	c.JSON(http.StatusOK, queue.NewLocalNodeTable())
+	c.JSON(http.StatusOK, queue.NewNodeTable())
 }
 
 func GetWorkerStatus(c *gin.Context) {
@@ -216,4 +212,12 @@ func AddClusterNode(c *gin.Context) {
 		Params: acquirePayload,
 	}
 	cluster.NewSlurmClusterClient().AcquireMachine(acquireMachinePayload)
+}
+
+// todo(xiaozhe): in future the internals will be migrated to rpc calls
+// this function receives a message from a peer and updates its workload table
+func UpdateWorkloadTable(c *gin.Context) {
+	var nodeStatus structs.NodeStatus
+	c.BindJSON(&nodeStatus)
+	queue.UpdateNodeTable(nodeStatus)
 }

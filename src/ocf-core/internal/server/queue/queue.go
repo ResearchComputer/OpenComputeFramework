@@ -3,8 +3,11 @@ package queue
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"ocfcore/internal/common"
+	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
+	"ocfcore/internal/server/p2p"
 	"sync"
 	"time"
 
@@ -14,16 +17,17 @@ import (
 )
 
 // package-level variables
-// read-only by external packages through singleton functions
+// read-only by external packages through New* functions
 // read-write by current package
 var natsConn *nats.Conn
 var natsServer *server.Server
-var lnt *structs.LocalNodeTable
+var lnt *structs.NodeTable
 
-var once sync.Once
+var natsOnce sync.Once
+var tableOnce sync.Once
 
 func NewNatsServer() *server.Server {
-	once.Do(func() {
+	natsOnce.Do(func() {
 		var err error
 		opts := &server.Options{
 			JetStream: true,
@@ -37,9 +41,10 @@ func NewNatsServer() *server.Server {
 	return natsServer
 }
 
-func NewLocalNodeTable() *structs.LocalNodeTable {
-	once.Do(func() {
-		lnt = &structs.LocalNodeTable{}
+func NewNodeTable() *structs.NodeTable {
+	tableOnce.Do(func() {
+		fmt.Println("Initializing node table")
+		lnt = &structs.NodeTable{}
 	})
 	return lnt
 }
@@ -83,14 +88,24 @@ func SubscribeWorkerStatus() error {
 		common.Logger.Debug("NATS client not started")
 		return nil
 	}
+	var lock = &sync.Mutex{}
 	_, err := natsConn.Subscribe("worker:status", func(msg *nats.Msg) {
+		lock.Lock()
+		// make sure the table is being updated by only one worker at a time
+		defer lock.Unlock()
+
 		var nodeStatus structs.NodeStatus
 		err := json.Unmarshal(msg.Data, &nodeStatus)
 		if err != nil {
 			common.Logger.Error("Failed to unmarshal worker status", "error", err)
 		}
-		*lnt = *NewLocalNodeTable().Update(nodeStatus)
-		// todo(xiaozhe): broadcast the worker status to the whole cluster
+		nodeStatus.PeerID = p2p.GetP2PNode().ID().String()
+		table := NewNodeTable()
+		fmt.Println("Updating local node table")
+		fmt.Println(nodeStatus)
+		fmt.Println(table)
+		*lnt = *table.Update(nodeStatus)
+		go requests.BroadcastNodeStatus(nodeStatus)
 	})
 	return err
 }
@@ -106,4 +121,8 @@ func GetProvidedService() ([]string, error) {
 		providedService = append(providedService, c.Subs...)
 	}
 	return providedService, nil
+}
+
+func UpdateNodeTable(nodeStatus structs.NodeStatus) {
+	*lnt = *NewNodeTable().Update(nodeStatus)
 }

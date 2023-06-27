@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"ocfcore/internal/common"
+	"ocfcore/internal/common/structs"
+	"strings"
 
 	ns "github.com/nats-io/nats-server/v2/server"
 	"github.com/spf13/viper"
@@ -57,4 +59,23 @@ func ReadProvidedService(peerId string) ([]string, error) {
 		providedService = append(providedService, conn.Subs...)
 	}
 	return providedService, nil
+}
+
+func UpdateRemoteNodeTable(peerId string, nodeStatus structs.NodeStatus) error {
+	remoteAddr := fmt.Sprintf("http://localhost:%s/api/v1/proxy/%s/api/v1/status/table", viper.GetString("port"), peerId)
+	reqString, err := json.Marshal(nodeStatus)
+	if err != nil {
+		return err
+	}
+	payload := strings.NewReader(string(reqString))
+	resp, err := NewHTTPClient().Post(remoteAddr, "application/json", payload)
+	if err != nil {
+		return err
+	}
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+	return nil
 }

@@ -24,19 +24,20 @@ type GPUSpec struct {
 }
 
 type NodeStatus struct {
+	PeerID   string    `json:"peer_id"`
 	ClientID int       `json:"client_id"`
 	Status   string    `json:"status"`
 	Specs    []GPUSpec `json:"gpus"`
 	Service  string    `json:"service"`
 }
 
-type LocalNodeTable struct {
+type NodeTable struct {
 	Nodes []NodeStatus `json:"nodes"`
 }
 
-func (lnt LocalNodeTable) Update(node NodeStatus) *LocalNodeTable {
+func (lnt NodeTable) Update(node NodeStatus) *NodeTable {
 	for idx, n := range lnt.Nodes {
-		if n.ClientID == node.ClientID {
+		if n.ClientID == node.ClientID && n.PeerID == node.PeerID {
 			lnt.Nodes[idx] = node
 			return &lnt
 		}

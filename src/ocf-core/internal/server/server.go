@@ -25,12 +25,12 @@ func StartServer() {
 		{
 			ocfcoreStatus.GET("/health", healthStatusCheck)
 			ocfcoreStatus.GET("/worker/:workerId/:metric", GetWorkerStatus)
-			// ocfcoreStatus.GET("/workers", GetWorkerHub)
+			ocfcoreStatus.GET("/workers", GetWorkerHub)
 			ocfcoreStatus.GET("/matchmaking", matchmakingStatus)
 			ocfcoreStatus.GET("/summary", GetSummary)
 			ocfcoreStatus.GET("/connections", GetConnections)
 			ocfcoreStatus.GET("/table", GetWorkloadTable)
-			ocfcoreStatus.GET("/workers", GetWorkloadTable)
+			ocfcoreStatus.POST("/table", UpdateWorkloadTable)
 		}
 		ocfcoreWs := v1.Group("/ws")
 		{
@@ -43,7 +43,7 @@ func StartServer() {
 			ocfcoreProxy.POST("/:peerId/*path", ForwardHandler)
 			ocfcoreProxy.GET("/:peerId/*path", ForwardHandler)
 		}
-		ocfcoreThrottle := v1.Group("/throttle")
+		ocfcoreThrottle := v1.Group("/controller")
 		{
 			ocfcoreThrottle.Use(auth.AuthorizeMiddleware())
 			ocfcoreThrottle.POST("/instructions/:workerId", LoadWorkload)
