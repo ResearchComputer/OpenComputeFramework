@@ -34,6 +34,13 @@ func NewNatsServer() *server.Server {
 	return natsServer
 }
 
+func NewLocalNodeTable() *structs.LocalNodeTable {
+	once.Do(func() {
+		lnt = &structs.LocalNodeTable{}
+	})
+	return lnt
+}
+
 func StartQueueServer() {
 	var err error
 	common.Logger.Info("Starting queue server...")
@@ -79,6 +86,8 @@ func SubscribeWorkerStatus() error {
 		if err != nil {
 			common.Logger.Error("Failed to unmarshal worker status", "error", err)
 		}
+		*lnt = *NewLocalNodeTable().Update(nodeStatus)
+		// todo(xiaozhe): broadcast the worker status to the whole cluster
 	})
 	return err
 }
