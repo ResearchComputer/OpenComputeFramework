@@ -1,21 +1,15 @@
 package server
 
 import (
-	"fmt"
-	"net/http"
 	"ocfcore/internal/common"
 	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/profiler"
 	"ocfcore/internal/server/p2p"
 	"ocfcore/internal/server/queue"
-	"strconv"
 	"sync"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
-	"github.com/nakabonne/tstorage"
 )
 
 type Worker struct {
@@ -65,65 +59,6 @@ func (wh WorkerHub) Exists(workerID string) bool {
 		}
 	}
 	return false
-}
-
-func GetWorkerHub(c *gin.Context) {
-	c.JSON(http.StatusOK, workerHub)
-}
-
-func GetConnections(c *gin.Context) {
-	conn, err := queue.GetQueueStatus()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	}
-	c.JSON(http.StatusOK, conn)
-}
-
-func GetWorkloadTable(c *gin.Context) {
-	table := GlobalWorkloadTable()
-	fmt.Println(table)
-	c.JSON(http.StatusOK, GlobalWorkloadTable())
-}
-
-func GetWorkerStatus(c *gin.Context) {
-	workerID := c.Param("workerId")
-	metricName := c.Param("metric")
-	start := c.Query("start")
-	if start == "" {
-		start = "0"
-	}
-	end := c.Query("end")
-	if end == "" {
-		end = strconv.FormatInt(time.Now().Unix(), 10)
-	}
-	// convert to int64
-	start_stamp, err := strconv.ParseInt(start, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-	end_stamp, err := strconv.ParseInt(end, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-
-	var points []*tstorage.DataPoint
-	var response []WorkerStatusResponse
-	if metricName == "all" {
-		metrics := [4]string{"Power Usage", "GPU Utilization", "Used Memory", "Available Memory"}
-		var points []*tstorage.DataPoint
-		for _, m := range metrics {
-			metricPoints := append(points, profiler.QueryPoints(start_stamp, end_stamp, m, workerID)...)
-			for _, point := range metricPoints {
-				response = append(response, WorkerStatusResponse{workerID, m, point.Timestamp, point.Value})
-			}
-		}
-	} else {
-		points = profiler.QueryPoints(start_stamp, end_stamp, metricName, workerID)
-		for _, point := range points {
-			response = append(response, WorkerStatusResponse{workerID, metricName, point.Timestamp, point.Value})
-		}
-	}
-	c.JSON(http.StatusOK, response)
 }
 
 func (s *WorkerService) Join(WorkerIP string, GPUSpecifier string, GPUMemory float32, availableWorkload []structs.AvailableWorkload) string {

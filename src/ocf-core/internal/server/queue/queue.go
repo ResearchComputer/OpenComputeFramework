@@ -13,6 +13,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// package-level variables
+// read-only by external packages through singleton functions
+// read-write by current package
 var natsConn *nats.Conn
 var natsServer *server.Server
 var lnt *structs.LocalNodeTable

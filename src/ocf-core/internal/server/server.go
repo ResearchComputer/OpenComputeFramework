@@ -25,12 +25,12 @@ func StartServer() {
 		{
 			ocfcoreStatus.GET("/health", healthStatusCheck)
 			ocfcoreStatus.GET("/worker/:workerId/:metric", GetWorkerStatus)
-			ocfcoreStatus.GET("/workers", GetWorkerHub)
+			// ocfcoreStatus.GET("/workers", GetWorkerHub)
 			ocfcoreStatus.GET("/matchmaking", matchmakingStatus)
 			ocfcoreStatus.GET("/summary", GetSummary)
 			ocfcoreStatus.GET("/connections", GetConnections)
 			ocfcoreStatus.GET("/table", GetWorkloadTable)
-
+			ocfcoreStatus.GET("/workers", GetWorkloadTable)
 		}
 		ocfcoreWs := v1.Group("/ws")
 		{
