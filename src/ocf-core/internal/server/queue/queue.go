@@ -144,6 +144,7 @@ func RemoveDisconnectedNode() {
 			// if not connected, remove from node table
 			node.Status = "disconnected"
 			*lnt = *NewNodeTable().Update(node)
+			go requests.BroadcastNodeStatus(node)
 		}
 	}
 }
