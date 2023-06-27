@@ -132,7 +132,7 @@ func RemoveDisconnectedNode() {
 		return
 	}
 	// for all nodes in lnt, check if they are still connected
-	for _, node := range lnt.Nodes {
+	for _, node := range NewNodeTable().Nodes {
 		connected := false
 		for _, c := range conn.Conns {
 			if c.Cid == uint64(node.ClientID) {
