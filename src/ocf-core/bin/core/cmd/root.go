@@ -31,7 +31,7 @@ var rootcmd = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
-	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.together/cfg.yaml)")
+	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ocf/cfg.yaml)")
 	rootcmd.AddCommand(starocfcored)
 	rootcmd.AddCommand(versionCmd)
 	rootcmd.AddCommand(updateCmd)

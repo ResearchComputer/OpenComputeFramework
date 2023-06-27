@@ -12,7 +12,7 @@ import (
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update the together binary to the latest version",
+	Short: "Update the ocf binary to the latest version",
 	Run: func(cmd *cobra.Command, args []string) {
 		updateURL := "https://cdn.xzyao.dev/ocfcore"
 		resp, err := http.Get(updateURL)

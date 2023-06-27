@@ -10,7 +10,6 @@ def inference(i):
             'prompt': "Hello!"
         }
     })
-    print(resp.text)
     return resp.text
 
 def global_inference(i):

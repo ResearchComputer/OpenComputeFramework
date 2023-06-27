@@ -1,0 +1,4 @@
+ocf_cli.egg-info
+dist/
+build/
+*.pyc
