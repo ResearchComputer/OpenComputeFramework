@@ -3,9 +3,9 @@ package queue
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"ocfcore/internal/common"
 	"ocfcore/internal/common/structs"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats-server/v2/server"
@@ -13,24 +13,35 @@ import (
 	"github.com/spf13/viper"
 )
 
-// todo(xiaozhe): this probably needs a refactor with singleton pattern
-
 var natsConn *nats.Conn
 var natsServer *server.Server
+var lnt *structs.LocalNodeTable
+
+var once sync.Once
+
+func NewNatsServer() *server.Server {
+	once.Do(func() {
+		var err error
+		opts := &server.Options{
+			JetStream: true,
+			Port:      viper.GetInt("queue.port"),
+		}
+		natsServer, err = server.NewServer(opts)
+		if err != nil {
+			panic(err)
+		}
+	})
+	return natsServer
+}
 
 func StartQueueServer() {
 	var err error
 	common.Logger.Info("Starting queue server...")
-	opts := &server.Options{
-		JetStream: true,
-		Port:      viper.GetInt("queue.port"),
-	}
-	natsServer, err = server.NewServer(opts)
+	natsServer = NewNatsServer()
 	if err != nil {
 		panic(err)
 	}
 	natsServer.Start()
-
 	if !natsServer.ReadyForConnections(4 * time.Second) {
 		panic("not ready for connection")
 	}
@@ -68,16 +79,12 @@ func SubscribeWorkerStatus() error {
 		if err != nil {
 			common.Logger.Error("Failed to unmarshal worker status", "error", err)
 		}
-		fmt.Println(nodeStatus)
 	})
 	return err
 }
 
 func GetProvidedService() ([]string, error) {
-	if natsServer == nil {
-		common.Logger.Info("NATS server not started")
-		return nil, errors.New("NATS server not started")
-	}
+	natsServer := NewNatsServer()
 	conn, err := natsServer.Connz(&server.ConnzOptions{Subscriptions: true, Offset: 1})
 	if err != nil {
 		return nil, err

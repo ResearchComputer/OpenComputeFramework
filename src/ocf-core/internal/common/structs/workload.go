@@ -5,6 +5,9 @@ type AvailableWorkload struct {
 	Modes []string `json:"modes"`
 }
 
+type NatsConnections struct {
+	ServerID string `json:"server_id"`
+}
 type LoadWorkLoadInstruction struct {
 	Workload        string            `json:"workload"`
 	Mode            string            `json:"mode"`
@@ -48,8 +51,4 @@ func (wt WorkloadTable) Find(workloadID string) *WorkloadTableRow {
 		}
 	}
 	return nil
-}
-
-type NatsConnections struct {
-	ServerID string `json:"server_id"`
 }

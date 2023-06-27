@@ -29,3 +29,18 @@ type NodeStatus struct {
 	Specs    []GPUSpec `json:"gpus"`
 	Service  string    `json:"service"`
 }
+
+type LocalNodeTable struct {
+	Nodes []NodeStatus `json:"nodes"`
+}
+
+func (lnt LocalNodeTable) Update(node NodeStatus) *LocalNodeTable {
+	for idx, n := range lnt.Nodes {
+		if n.ClientID == node.ClientID {
+			lnt.Nodes[idx] = node
+			return &lnt
+		}
+	}
+	lnt.Nodes = append(lnt.Nodes, node)
+	return &lnt
+}
