@@ -1,3 +1,4 @@
+'use client'
 import { Metadata } from "next"
 import { History } from "lucide-react"
 
@@ -27,17 +28,42 @@ import { PresetSelector } from "@/components/preset-selector"
 import { PresetShare } from "@/components/preset-share"
 import { TemperatureSelector } from "@/components/temperature-selector"
 import { TopPSelector } from "@/components/top-p-selector"
-import { models, types } from "./data/models"
+import { types } from "./data/models"
 import { presets } from "./data/presets"
 import "./styles.css"
 import Image from "next/image"
+import { public_relay } from "@/lib/api"
 
-export const metadata: Metadata = {
-  title: "Playground",
-  description: "The OpenAI Playground built using the components.",
+async function getData() {
+  const res = await fetch(public_relay+'/api/v1/status/table')
+  if (!res.ok) {
+    throw new Error('Failed to fetch data')
+  }
+  return res.json()
 }
 
-export default function PlaygroundPage() {
+function getModels(data:any) {
+  let services:any = []
+  for (let node of data.nodes) {
+    if (!services.includes(node.service) && node.service.startsWith("inference:")) {
+      services.push(node.service.replace("inference:", ""))
+    }
+  }
+  services = services.map((service:any) => {
+    return {
+      id: service,
+      name: service,
+      description: service,
+      type: 'Text-Completion',
+      strengths: "N/A"
+    }
+  })
+  return services
+}
+
+export default async function PlaygroundPage() {
+  const data = await getData()
+  const models = getModels(data)
   return (
     <>
       <div className="md:hidden">
@@ -60,13 +86,13 @@ export default function PlaygroundPage() {
         <div className="container flex flex-col items-start justify-between space-y-2 py-4 sm:flex-row sm:items-center sm:space-y-0 md:h-16">
           <h2 className="text-lg font-semibold">Playground</h2>
           <div className="ml-auto flex w-full space-x-2 sm:justify-end">
-            <PresetSelector presets={presets} />
-            <PresetSave />
+            {/* <PresetSelector presets={presets} />
+            <PresetSave /> */}
             <div className="hidden space-x-2 md:flex">
               <CodeViewer />
-              <PresetShare />
+              {/* <PresetShare /> */}
             </div>
-            <PresetActions />
+            {/* <PresetActions /> */}
           </div>
         </div>
         <Separator />

@@ -44,7 +44,6 @@ function countServices(data:any) {
 
 export default async function DashboardPage() {
   const data = await getData()
-  
   return (
     <>
       <div className="md:hidden">
