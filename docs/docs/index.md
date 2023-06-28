@@ -1,6 +1,6 @@
-# Welcome to Open Compute Framework
+# Welcome
 
-Open Compute Framework is a framework for decentralized computing. 
+**Open Compute Framework** is a framework for decentralized computing. 
 
 ## Why Decentralized Computing?
 

@@ -1,3 +1,27 @@
 site_name: Open Compute Framework
 theme:
   name: material
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+
+repo_url: https://github.com/autoai-org/ocf
+repo_name: autoai-org/ocf
+nav:
+  - Home: index.md
+  - User Guide:
+    - Getting Started: guide/getting-started.md
+  - Advanced:
+    - Internals:  advanced/internals.md
+  - Status: https://ocfstatus.autoai.dev
+extra:
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/3BD3RzK2K2
+    - icon: fontawesome/brands/twitter 
+      link: https://twitter.com/autoaiHQ
+    - icon: fontawesome/brands/github 
+      link: https://github.com/autoai-org
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/u/autoai
