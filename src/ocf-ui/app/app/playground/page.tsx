@@ -1,5 +1,6 @@
 'use client'
-import { History } from "lucide-react"
+
+import { Redo2 } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/registry/new-york/ui/button"
 import {
@@ -16,7 +17,7 @@ import {
   TabsTrigger,
 } from "@/registry/new-york/ui/tabs"
 import { Textarea } from "@/registry/new-york/ui/textarea"
-
+import { ElementType } from "react"
 import { CodeViewer } from "@/components/code-viewer"
 import { Icons } from "@/components/icons"
 import { MaxLengthSelector } from "@/components/maxlength-selector"
@@ -61,18 +62,34 @@ function getModels(data:any) {
   return services
 }
 
-
-
 export default async function PlaygroundPage() {
 
   const data = await getData()
   const models = getModels(data)
-  const completion_ref:React.RefObject<HTMLTextAreaElement> = React.createRef();
+  
+  const completion_ref = React.createRef<HTMLTextAreaElement>();
+  const temperature_ref = React.createRef<HTMLSpanElement>();
 
   async function submit() {
-    console.log(completion_ref.current?.value)
+    let prompt = completion_ref.current?.value
+    let temperature = temperature_ref.current?.innerText
+    let resp = await fetch(public_relay+'/api/v1/request/inference', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model_name:'togethercomputer/RedPajama-INCITE-Chat-3B-v1',
+        params: {
+          prompt: prompt,
+          temperature: temperature
+        }
+      })
+    })
+    let response_json:any = await resp.json()
+    let reply = JSON.parse(response_json['data'])['output']['text']
+    completion_ref.current!.value += reply
   }
-  
   return (
     <>
       <div className="md:hidden">
@@ -139,7 +156,7 @@ export default async function PlaygroundPage() {
                   </TabsList>
                 </div>
                 <ModelSelector types={types} models={models} />
-                <TemperatureSelector defaultValue={[0.6]} />
+                <TemperatureSelector defaultValue={[0.6]} ref={temperature_ref}/>
                 <MaxLengthSelector defaultValue={[256]} />
                 <TopPSelector defaultValue={[0.9]} />
                 <TopKSelector defaultValue={[50]} />
@@ -152,10 +169,10 @@ export default async function PlaygroundPage() {
                       className="min-h-[400px] flex-1 p-4 md:min-h-[700px] lg:min-h-[700px]" ref={completion_ref}
                     />
                     <div className="flex items-center space-x-2">
-                      <Button>Submit</Button>
+                      <Button onClick={submit}>Submit</Button>
                       <Button variant="secondary">
                         <span className="sr-only">Show history</span>
-                        <History className="h-4 w-4" />
+                        <Redo2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -170,10 +187,10 @@ export default async function PlaygroundPage() {
                       <div className="rounded-md border bg-muted"></div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button>Submit</Button>
+                      <Button onClick={submit}>Submit</Button>
                       <Button variant="secondary">
-                        <span className="sr-only">Show history</span>
-                        <History className="h-4 w-4" />
+                        <span className="sr-only">Clear</span>
+                        <Redo2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -201,10 +218,11 @@ export default async function PlaygroundPage() {
                       <div className="mt-[21px] min-h-[400px] rounded-md border bg-muted lg:min-h-[700px]" />
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button onClick={submit}>Submit</Button>
+                      <Button onClick={() => {submit}}>Submit</Button>
+                      
                       <Button variant="secondary">
-                        <span className="sr-only">Show history</span>
-                        <History className="h-4 w-4" />
+                        <span className="sr-only">Clear</span>
+                        <Redo2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
