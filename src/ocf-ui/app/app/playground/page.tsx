@@ -1,7 +1,6 @@
 'use client'
-import { Metadata } from "next"
 import { History } from "lucide-react"
-
+import * as React from "react"
 import { Button } from "@/registry/new-york/ui/button"
 import {
   HoverCard,
@@ -26,10 +25,11 @@ import { PresetActions } from "@/components/preset-actions"
 import { PresetSave } from "@/components/preset-save"
 import { PresetSelector } from "@/components/preset-selector"
 import { PresetShare } from "@/components/preset-share"
+import { presets } from "./data/presets"
 import { TemperatureSelector } from "@/components/temperature-selector"
 import { TopPSelector } from "@/components/top-p-selector"
+import { TopKSelector } from "@/components/top-k-selector"
 import { types } from "./data/models"
-import { presets } from "./data/presets"
 import "./styles.css"
 import Image from "next/image"
 import { public_relay } from "@/lib/api"
@@ -61,9 +61,18 @@ function getModels(data:any) {
   return services
 }
 
+
+
 export default async function PlaygroundPage() {
+
   const data = await getData()
   const models = getModels(data)
+  const completion_ref:React.RefObject<HTMLTextAreaElement> = React.createRef();
+
+  async function submit() {
+    console.log(completion_ref.current?.value)
+  }
+  
   return (
     <>
       <div className="md:hidden">
@@ -130,16 +139,17 @@ export default async function PlaygroundPage() {
                   </TabsList>
                 </div>
                 <ModelSelector types={types} models={models} />
-                <TemperatureSelector defaultValue={[0.56]} />
+                <TemperatureSelector defaultValue={[0.6]} />
                 <MaxLengthSelector defaultValue={[256]} />
                 <TopPSelector defaultValue={[0.9]} />
+                <TopKSelector defaultValue={[50]} />
               </div>
               <div className="md:order-1">
                 <TabsContent value="complete" className="mt-0 border-0 p-0">
                   <div className="flex h-full flex-col space-y-4">
                     <Textarea
                       placeholder="Write a tagline for an ice cream shop"
-                      className="min-h-[400px] flex-1 p-4 md:min-h-[700px] lg:min-h-[700px]"
+                      className="min-h-[400px] flex-1 p-4 md:min-h-[700px] lg:min-h-[700px]" ref={completion_ref}
                     />
                     <div className="flex items-center space-x-2">
                       <Button>Submit</Button>
@@ -154,7 +164,7 @@ export default async function PlaygroundPage() {
                   <div className="flex flex-col space-y-4">
                     <div className="grid h-full grid-rows-2 gap-6 lg:grid-cols-2 lg:grid-rows-1">
                       <Textarea
-                        placeholder="We're writing to [inset]. Congrats from OpenAI!"
+                        placeholder="We're writing to [inset]. Congrats!"
                         className="h-full min-h-[300px] lg:min-h-[700px] xl:min-h-[700px]"
                       />
                       <div className="rounded-md border bg-muted"></div>
@@ -191,7 +201,7 @@ export default async function PlaygroundPage() {
                       <div className="mt-[21px] min-h-[400px] rounded-md border bg-muted lg:min-h-[700px]" />
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button>Submit</Button>
+                      <Button onClick={submit}>Submit</Button>
                       <Button variant="secondary">
                         <span className="sr-only">Show history</span>
                         <History className="h-4 w-4" />

@@ -30,7 +30,7 @@ export function CodeViewer() {
                   <span className="text-sky-300">import</span> os
                 </span>
                 <span>
-                  <span className="text-sky-300">import</span> openai
+                  <span className="text-sky-300">from</span> ocf_cli <span className="text-sky-300">import</span> ocf_client
                 </span>
                 <span />
                 <span>
@@ -41,11 +41,11 @@ export function CodeViewer() {
                   )
                 </span>
                 <span />
-                <span>response = openai.Completion.create(</span>
+                <span>response = ocf_client.Completion.create(</span>
                 <span>
                   {" "}
                   model=
-                  <span className="text-green-300">&quot;davinci&quot;</span>,
+                  <span className="text-green-300">&quot;YOUR_MODEL_NAME&quot;</span>,
                 </span>
                 <span>
                   {" "}
@@ -77,9 +77,7 @@ export function CodeViewer() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">
-              Your API Key can be found here. You should use environment
-              variables or a secret management tool to expose your key to your
-              applications.
+              We will soon add authorizations to the API.
             </p>
           </div>
         </div>
