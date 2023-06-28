@@ -12,28 +12,28 @@ export function MainNav({
       {...props}
     >
       <Link
-        href="/examples/dashboard"
+        href="/app/dashboard"
         className="text-sm font-medium transition-colors hover:text-primary"
       >
         Overview
       </Link>
       <Link
-        href="/examples/dashboard"
+        href="/app/playground"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Customers
+        Playground
       </Link>
       <Link
-        href="/examples/dashboard"
+        href="https://ocf.autoai.org"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Products
+        Docs
       </Link>
       <Link
-        href="/examples/dashboard"
+        href="https://ocfstatus.autoai.dev"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Settings
+        Status
       </Link>
     </nav>
   )

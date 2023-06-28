@@ -7,6 +7,7 @@ export const siteConfig = {
   links: {
     twitter: "https://twitter.com/autoaiHQ",
     github: "https://github.com/autoai-org/ocf",
+    discord: "https://discord.gg/3BD3RzK2K2",
   },
 }
 
