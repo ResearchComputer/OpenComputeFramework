@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ocf_cli"
-dynamic = ["version"]
+version = "0.0.2"
 authors = [
   { name="Xiaozhe Yao", email="askxzyao@gmail.com" },
 ]

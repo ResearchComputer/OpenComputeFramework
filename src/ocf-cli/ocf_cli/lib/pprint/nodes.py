@@ -15,7 +15,7 @@ def pprint_nodes():
     table.add_column("Service")
     table.add_column("Status")
     table.add_column("GPU Device")
-    table.add_column("GPU Memory")
+    table.add_column("GPU Memory (used / total)")
     for node in resp['nodes']:
         # make it 1x NVIDIA GeForce RTX 3090... etc.
         gpus_specs = {}
