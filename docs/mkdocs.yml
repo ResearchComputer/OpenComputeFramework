@@ -12,6 +12,7 @@ nav:
   - Home: index.md
   - User Guide:
     - Getting Started: guide/getting-started.md
+    - Inference: guide/inference.md
   - Advanced:
     - Internals:  advanced/internals.md
   - Status: https://ocfstatus.autoai.dev
