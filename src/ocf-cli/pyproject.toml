@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocf_cli"
+dynamic = ["version"]
+authors = [
+  { name="Xiaozhe Yao", email="askxzyao@gmail.com" },
+]
+description = "OCF CLI"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "typer",
+  "requests",
+  "rich",
+  "loguru",
+  "huggingface-hub",
+  "pynvml"
+]
+
+[project.scripts]
+ocf = 'ocf_cli.bin.ocf:app'
+
+[tool.setuptools]
+packages = ["ocf_cli"]
+
+[project.urls]
+"Homepage" = "https://github.com/autoai-org/ocf"
+"Bug Tracker" = "https://github.com/autoai-org/ocf/issues"
+

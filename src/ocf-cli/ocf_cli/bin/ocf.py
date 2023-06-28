@@ -1,9 +1,10 @@
-#! python
+#!/usr/bin/env python
 import os
 import typer
 from typing import Optional
 from ocf_cli.lib.core.config import read_config
 from ocf_cli.lib.pprint.nodes import pprint_nodes
+from ocf_cli.lib.pprint.service import pprint_service
 
 app = typer.Typer()
 home_dir = os.path.expanduser("~")
@@ -15,6 +16,8 @@ config = read_config(config_path)
 def list(entity: str):
     if entity == "node":
         pprint_nodes()
+    elif entity == "service":
+        pprint_service()
     else:
         print("[ERROR] Unknown: ", entity)
 

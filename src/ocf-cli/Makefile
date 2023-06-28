@@ -9,11 +9,10 @@ format:
 clean:
 	rm -rf build
 	rm -rf dist
-	rm -rf toma.egg-info
+	rm -rf ocf_cli.egg-info
 
 build:
-	make clean
-	python3 setup.py sdist bdist_wheel
+	python -m build --wheel
 
 test:
 	PYTHONPATH=./ python3 tests/server.py
@@ -24,5 +23,9 @@ publish-test:
 publish:
 	twine upload dist/*
 
+install-local:
+	pip install -e .
+
 install-test:
 	pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ ocf_cli -U
+

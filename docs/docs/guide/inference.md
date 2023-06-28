@@ -1,3 +1,14 @@
+## Inference Service
+
+To use the inference service, you can first check the status of the service by running:
+
+```bash
+ocf list service
+```
+
+Then you can run the following script to test the inference service:
+
+```python
 import json
 import requests
 
@@ -20,3 +31,4 @@ def inference():
 
 if __name__ == "__main__":
     inference()
+```
