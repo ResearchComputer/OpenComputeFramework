@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/registry/new-york/ui/popover"
 
-import { Model, ModelType } from "../data/models"
+import { Model, ModelType } from "@/app/app/playground/data/models"
 
 interface ModelSelectorProps extends PopoverProps {
   types: readonly ModelType[]

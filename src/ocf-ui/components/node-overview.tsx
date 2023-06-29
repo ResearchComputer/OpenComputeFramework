@@ -3,6 +3,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/registry/new-york/ui/avatar"
+import { string } from "zod"
 
 function gpuStr(gpus: any) {
   // format: 1x NVIDIA GeForce RTX 3090
@@ -25,8 +26,8 @@ export function NodeOverview(nodes: any) {
   let nnodes = nodes.nodes
   return (
     <div className="space-y-8">
-      {nnodes.map((node: any) => (
-        <div className="flex items-center">
+      {nnodes.map((node: any, idx: Number) => (
+        <div className="flex items-center" key={idx.toString()}>
         <Avatar className="h-9 w-9">
           <AvatarImage src="/avatars/01.png" alt="Avatar" />
           <AvatarFallback>{node.client_id}</AvatarFallback>

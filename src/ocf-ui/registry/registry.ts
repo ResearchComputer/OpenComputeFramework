@@ -356,12 +356,6 @@ const example: Registry = [
     files: ["example/calendar-demo.tsx"],
   },
   {
-    name: "calendar-form",
-    type: "components:example",
-    registryDependencies: ["calendar", "form", "popover"],
-    files: ["example/calendar-form.tsx"],
-  },
-  {
     name: "card-demo",
     type: "components:example",
     registryDependencies: ["card", "button", "switch"],
@@ -456,20 +450,6 @@ const example: Registry = [
     type: "components:example",
     registryDependencies: ["data-table"],
     files: ["example/data-table-demo.tsx"],
-  },
-  {
-    name: "date-picker-demo",
-    type: "components:example",
-    registryDependencies: ["button", "calendar", "popover"],
-    files: ["example/date-picker-demo.tsx"],
-    dependencies: ["date-fns"],
-  },
-  {
-    name: "date-picker-form",
-    type: "components:example",
-    registryDependencies: ["button", "calendar", "form", "popover"],
-    files: ["example/date-picker-form.tsx"],
-    dependencies: ["date-fns"],
   },
   {
     name: "date-picker-with-presets",

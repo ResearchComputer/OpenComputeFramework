@@ -46,8 +46,8 @@ export function ServiceOverview(nodes: any) {
   let services = constructService(nodes.nodes)
   return (
     <div className="space-y-8">
-      {services.map((service: any) => (
-        <div className="flex items-center">
+      {services.map((service: any, idx: Number) => (
+        <div className="flex items-center" key={idx.toString()}>
         <Avatar className="h-9 w-9">
           <AvatarImage src="/avatars/01.png" alt="Avatar" />
           <AvatarFallback>INF</AvatarFallback>

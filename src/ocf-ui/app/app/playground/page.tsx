@@ -17,7 +17,7 @@ import {
   TabsTrigger,
 } from "@/registry/new-york/ui/tabs"
 import { Textarea } from "@/registry/new-york/ui/textarea"
-import { ElementType } from "react"
+import { useState, useEffect } from 'react'
 import { CodeViewer } from "@/components/code-viewer"
 import { Icons } from "@/components/icons"
 import { MaxLengthSelector } from "@/components/maxlength-selector"
@@ -34,14 +34,6 @@ import { types } from "./data/models"
 import "./styles.css"
 import Image from "next/image"
 import { public_relay } from "@/lib/api"
-
-async function getData() {
-  const res = await fetch(public_relay+'/api/v1/status/table')
-  if (!res.ok) {
-    throw new Error('Failed to fetch data')
-  }
-  return res.json()
-}
 
 function getModels(data:any) {
   let services:any = []
@@ -62,11 +54,26 @@ function getModels(data:any) {
   return services
 }
 
-export default async function PlaygroundPage() {
+export default function PlaygroundPage() {
+  const [data, setData] = useState(null)
+  const [models, setModels] = useState([])
+  const [isLoading, setLoading] = useState(true)
+ 
+  useEffect(() => {
+    console.log("useEffect")
+    fetch(public_relay+'/api/v1/status/table')
+      .then((res) => {
+        return res.json()
+      })
+      .then((data:any) => {
+        setData(data)
+        setModels(getModels(data))
+        setLoading(false)
+      }).catch((err) => {
+        console.log(err)
+      })
+  }, [])
 
-  const data = await getData()
-  const models = getModels(data)
-  
   const completion_ref = React.createRef<HTMLTextAreaElement>();
   const temperature_ref = React.createRef<HTMLSpanElement>();
 
@@ -88,8 +95,9 @@ export default async function PlaygroundPage() {
     })
     let response_json:any = await resp.json()
     let reply = JSON.parse(response_json['data'])['output']['text']
-    completion_ref.current!.value += reply
+    completion_ref.current!.value = reply
   }
+  if (isLoading) return <p>Loading...</p>
   return (
     <>
       <div className="md:hidden">
@@ -145,14 +153,14 @@ export default async function PlaygroundPage() {
                       <span className="sr-only">Complete</span>
                       <Icons.completeMode className="h-5 w-5" />
                     </TabsTrigger>
-                    <TabsTrigger value="insert">
+                    {/* <TabsTrigger value="insert">
                       <span className="sr-only">Insert</span>
                       <Icons.insertMode className="h-5 w-5" />
                     </TabsTrigger>
                     <TabsTrigger value="edit">
                       <span className="sr-only">Edit</span>
                       <Icons.editMode className="h-5 w-5" />
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                   </TabsList>
                 </div>
                 <ModelSelector types={types} models={models} />
