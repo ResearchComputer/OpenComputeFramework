@@ -69,7 +69,7 @@ func StartQueueServer() {
 }
 
 func Publish(topic string, data []byte) (*nats.Msg, error) {
-	msg, err := natsConn.Request(topic, data, 10*time.Second)
+	msg, err := natsConn.Request(topic, data, 3600*time.Second)
 	return msg, err
 }
 
