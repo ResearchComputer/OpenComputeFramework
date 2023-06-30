@@ -28,3 +28,5 @@ The message bus is used for managing the following tasks:
 
 * **Node Status**: When a worker joins the network, it will send a message to the node to announce its presence. The node will then broadcast the message to the network.
 * **Query Queue**: When a node receives a query, it will put the query into the message bus. The worker will then pick up the query from the message bus and process it.
+
+## CAP Principles

@@ -60,7 +60,6 @@ export default function PlaygroundPage() {
   const [isLoading, setLoading] = useState(true)
  
   useEffect(() => {
-    console.log("useEffect")
     fetch(public_relay+'/api/v1/status/table')
       .then((res) => {
         return res.json()
@@ -70,7 +69,6 @@ export default function PlaygroundPage() {
         setModels(getModels(data))
         setLoading(false)
       }).catch((err) => {
-        console.log(err)
       })
   }, [])
 

@@ -1,7 +1,8 @@
+'use client'
 import { Metadata } from "next"
 import Image from "next/image"
 import { Activity, CreditCard, DollarSign, Users } from "lucide-react"
-
+import {useState, useEffect} from 'react'
 import {
   Card,
   CardContent,
@@ -27,11 +28,6 @@ async function getData() {
   return res.json()
 }
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Example dashboard app using the components.",
-}
-
 function countServices(data:any) {
   let services:any = []
   for (let node of data.nodes) {
@@ -42,8 +38,23 @@ function countServices(data:any) {
   return services.length
 }
 
-export default async function DashboardPage() {
-  const data = await getData()
+export default function DashboardPage() {
+  const [data, setData] = useState({nodes:[]})
+  const [isLoading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(public_relay+'/api/v1/status/table')
+      .then((res) => {
+        return res.json()
+      })
+      .then((data:any) => {
+        setData(data)
+        setLoading(false)
+      }).catch((err) => {
+      })
+  }, [])
+  if (isLoading) return <p>Loading...</p>
+
   return (
     <>
       <div className="md:hidden">
