@@ -123,18 +123,30 @@ func UpdateNodeTable(nodeStatus structs.NodeStatus) {
 	*lnt = *NewNodeTable().Update(nodeStatus)
 }
 
+func RemovePeerFromNodeTable(peerID string) {
+	for _, node := range NewNodeTable().Nodes {
+		if node.PeerID == peerID {
+			node.Status = "disconnected"
+			*lnt = *NewNodeTable().Update(node)
+		}
+	}
+}
+
 func RemoveDisconnectedNode() {
 	natsServer := NewNatsServer()
+	p2pNode := p2p.GetP2PNode()
 	conn, err := natsServer.Connz(&server.ConnzOptions{Subscriptions: true, Offset: 1})
 	if err != nil {
 		common.Logger.Error("Failed to get connection status: ", err)
 		common.Logger.Error("If this persists, the node table will not be updated")
 		return
 	}
-	// for all nodes in lnt, check if they are still connected
+	// two steps:
+	// check if all nodes in the DNT are still connected
+	// for all nodes in lnt, check if my workers are still connected
 	for _, node := range NewNodeTable().Nodes {
 		// if it is the current node, then continue
-		if node.PeerID == p2p.GetP2PNode().ID().String() {
+		if node.PeerID == p2pNode.ID().String() {
 			connected := false
 			for _, c := range conn.Conns {
 				if c.Cid == uint64(node.ClientID) {
@@ -148,6 +160,21 @@ func RemoveDisconnectedNode() {
 				*lnt = *NewNodeTable().Update(node)
 				go requests.BroadcastNodeStatus(node)
 			}
+		} else {
+			// check if it is in peerstore
+			disconnected := false
+			for _, p := range p2p.DisconnectedPeers {
+				if p == node.PeerID {
+					disconnected = true
+					break
+				}
+			}
+			if disconnected {
+				// if disconnected, remove from node table
+				node.Status = "disconnected"
+				*lnt = *NewNodeTable().Update(node)
+			}
 		}
+
 	}
 }
