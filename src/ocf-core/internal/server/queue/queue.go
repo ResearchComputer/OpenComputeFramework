@@ -170,6 +170,7 @@ func RemoveDisconnectedNode() {
 				}
 			}
 			if disconnected {
+				common.Logger.Debug("Peer ", node.PeerID, " is disconnected")
 				// if disconnected, remove from node table
 				node.Status = "disconnected"
 				*lnt = *NewNodeTable().Update(node)

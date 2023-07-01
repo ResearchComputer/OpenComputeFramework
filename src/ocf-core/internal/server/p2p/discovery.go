@@ -52,6 +52,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 						continue
 					}
 				}
+				common.Logger.Debug("Connectivity to peer: ", p.ID, " is ", h.Network().Connectedness(p.ID))
 				if h.Network().Connectedness(p.ID) == network.Connected {
 					h.Peerstore().AddAddrs(p.ID, p.Addrs, peerstore.PermanentAddrTTL)
 					// remove it from DisconnectedPeers
