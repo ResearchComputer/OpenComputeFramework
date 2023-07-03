@@ -22,7 +22,9 @@ dependencies = [
   "rich",
   "loguru",
   "huggingface-hub",
-  "pynvml"
+  "pynvml",
+  "loguru",
+  "nats-py"
 ]
 
 [project.scripts]
