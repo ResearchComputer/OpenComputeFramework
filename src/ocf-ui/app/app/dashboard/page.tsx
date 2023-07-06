@@ -1,5 +1,4 @@
 'use client'
-import { Metadata } from "next"
 import Image from "next/image"
 import { Activity, CreditCard, DollarSign, Users } from "lucide-react"
 import {useState, useEffect} from 'react'
@@ -20,14 +19,6 @@ import { ServiceOverview } from "@/components/service-overview"
 import { NodeOverview } from "@/components/node-overview"
 import { public_relay } from "@/lib/api"
 
-async function getData() {
-  const res = await fetch(public_relay+'/api/v1/status/table')
-  if (!res.ok) {
-    throw new Error('Failed to fetch data')
-  }
-  return res.json()
-}
-
 function countServices(data:any) {
   let services:any = []
   for (let node of data.nodes) {
@@ -45,12 +36,16 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch(public_relay+'/api/v1/status/table')
       .then((res) => {
-        return res.json()
+        return res.text()
       })
       .then((data:any) => {
-        setData(data)
+        console.log(data)
+        let json_data = JSON.parse(data)
+        console.log(json_data)
+        setData(json_data)
         setLoading(false)
       }).catch((err) => {
+        console.error(err)
       })
   }, [])
   if (isLoading) return <p>Loading...</p>

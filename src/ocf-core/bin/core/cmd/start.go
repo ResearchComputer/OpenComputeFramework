@@ -8,7 +8,7 @@ import (
 
 var starocfcored = &cobra.Command{
 	Use:   "start",
-	Short: "Start pulling jobs from the zentrum and dispatching them to the workers",
+	Short: "Start listening for incoming connections",
 	Run: func(cmd *cobra.Command, args []string) {
 		daemon.Start()
 	}}

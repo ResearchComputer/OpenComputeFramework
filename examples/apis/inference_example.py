@@ -1,11 +1,11 @@
 import json
 import requests
 
-URL = "https://inference.autoai.dev/api/v1/request/handler"
+URL = "https://inference.autoai.dev/api/v1/request/inference"
 
 def inference():
     resp = requests.post(URL, json={
-        'model_name': 'inference:mosaicml/mpt-7b-chat',
+        'model_name': 'togethercomputer/RedPajama-INCITE-7B-Chat',
         'params': {
             'prompt': "<human>: tell me about computer science?\n<bot>: ",
             'max_tokens': 32,
