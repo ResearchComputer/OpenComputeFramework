@@ -17,8 +17,8 @@ active
 * paused
 * running
 finished
-* finished(failed) non-zero rc
-* finished(success) zero rc
+* finished(failed) non-zero return code
+* finished(success) zero return code
 """
 
 

@@ -28,6 +28,7 @@ dependencies = [
   "click",
   "psutil",
   "humanize",
+  "netifaces",
 ]
 
 [project.scripts]
