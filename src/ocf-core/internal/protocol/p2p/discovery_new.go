@@ -17,6 +17,7 @@ var discoverLockNew sync.Mutex
 
 // DiscoverNew is a function that keeps updating DNT with the latest information about the network.
 func DiscoverNew(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
+	var disconnected []string
 	discoverLockNew.Lock()
 	defer discoverLockNew.Unlock()
 	var routingDiscovery = routing.NewRoutingDiscovery(dht)
@@ -28,6 +29,14 @@ func DiscoverNew(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous 
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			// cleaning disconnected peers
+			storedPeers := h.Peerstore().Peers()
+			for _, p := range storedPeers {
+				if h.Network().Connectedness(p) == network.NotConnected {
+					disconnected = append(disconnected, p.String())
+				}
+			}
+			GetNodeTable().RemoveDisconnectedPeer(disconnected)
 			peers, err := routingDiscovery.FindPeers(ctx, rendezvous)
 			if err != nil {
 				common.Logger.Error(err)
@@ -37,7 +46,7 @@ func DiscoverNew(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous 
 					continue
 				}
 				if h.Network().Connectedness(p.ID) != network.Connected {
-					_, err = h.Network().DialPeer(ctx, p.ID)
+					_, err := h.Network().DialPeer(ctx, p.ID)
 					if err != nil {
 						continue
 					}
@@ -45,8 +54,10 @@ func DiscoverNew(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous 
 				common.Logger.Debug("Connectivity to peer: ", p.ID, " [", h.Network().Connectedness(p.ID), "] ")
 				if h.Network().Connectedness(p.ID) == network.Connected {
 					h.Peerstore().AddAddrs(p.ID, p.Addrs, peerstore.PermanentAddrTTL)
-					// add to tempDNT
-
+					GetNodeTable().Update(Peer{
+						PeerID: p.ID.String(),
+						Status: CONNECTED,
+					})
 				}
 			}
 		}

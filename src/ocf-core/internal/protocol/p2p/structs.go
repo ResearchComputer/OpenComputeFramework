@@ -1,5 +1,14 @@
 package p2p
 
+import "sync"
+
+var dntOnce sync.Once
+
+const (
+	CONNECTED    string = "connected"
+	DISCONNECTED string = "disconnected"
+)
+
 type GPUSpec struct {
 	Name            string `json:"name"`
 	Memory          int64  `json:"memory"`
@@ -13,13 +22,6 @@ type HardwareSpec struct {
 	MemoryBandwidth int64     `json:"host_memory_bandwidth"`
 	UsedMemory      int64     `json:"host_memory_used"`
 }
-
-type PeerStatus string
-
-const (
-	CONNECTED    PeerStatus = "connected"
-	DISCONNECTED PeerStatus = "disconnected"
-)
 
 // Peer is a single node in the network, as can be seen by the current node.
 type Peer struct {
@@ -37,6 +39,15 @@ type Peer struct {
 // Node table tracks the nodes and their status in the network.
 type NodeTable struct {
 	Peers []Peer `json:"peers"`
+}
+
+var nodeTable *NodeTable
+
+func GetNodeTable() *NodeTable {
+	dntOnce.Do(func() {
+		nodeTable = &NodeTable{}
+	})
+	return nodeTable
 }
 
 func (dnt NodeTable) Update(peer Peer) *NodeTable {
@@ -65,4 +76,14 @@ func (dnt NodeTable) FindProviders(service string) []Peer {
 		}
 	}
 	return providers
+}
+
+func (dnt NodeTable) RemoveDisconnectedPeer(disconnected []string) {
+	for _, p := range dnt.Peers {
+		for _, d := range disconnected {
+			if p.PeerID == d {
+				dnt.Update(Peer{PeerID: p.PeerID, Status: DISCONNECTED})
+			}
+		}
+	}
 }
