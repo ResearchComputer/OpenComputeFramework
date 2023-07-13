@@ -10,7 +10,7 @@ import (
 	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/profiler"
-	"ocfcore/internal/server/p2p"
+	"ocfcore/internal/protocol/p2p"
 	"ocfcore/internal/server/queue"
 	"strconv"
 	"time"

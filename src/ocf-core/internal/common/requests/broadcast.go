@@ -2,7 +2,7 @@ package requests
 
 import (
 	"ocfcore/internal/common/structs"
-	"ocfcore/internal/server/p2p"
+	"ocfcore/internal/protocol/p2p"
 )
 
 // functions for massively broadcasting messages to all peers

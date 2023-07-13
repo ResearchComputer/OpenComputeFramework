@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 	"ocfcore/internal/common"
+	"ocfcore/internal/protocol/p2p"
 	"ocfcore/internal/server/auth"
-	"ocfcore/internal/server/p2p"
 	"ocfcore/internal/server/queue"
 	"sync"
 

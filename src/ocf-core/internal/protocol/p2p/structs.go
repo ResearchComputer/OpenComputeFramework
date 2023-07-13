@@ -78,7 +78,7 @@ func (dnt NodeTable) FindProviders(service string) []Peer {
 	return providers
 }
 
-func (dnt NodeTable) RemoveDisconnectedPeer(disconnected []string) {
+func (dnt NodeTable) RemoveDisconnectedPeers(disconnected []string) {
 	for _, p := range dnt.Peers {
 		for _, d := range disconnected {
 			if p.PeerID == d {

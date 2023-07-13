@@ -7,7 +7,7 @@ import (
 	"ocfcore/internal/common"
 	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
-	"ocfcore/internal/server/p2p"
+	"ocfcore/internal/protocol/p2p"
 	"sync"
 	"time"
 
@@ -142,7 +142,6 @@ func RemoveDisconnectedNode() {
 		return
 	}
 	// two steps:
-	// check if all nodes in the DNT are still connected
 	// for all nodes in lnt, check if my workers are still connected
 	for _, node := range NewNodeTable().Nodes {
 		// if it is the current node, then continue
@@ -160,22 +159,6 @@ func RemoveDisconnectedNode() {
 				*lnt = *NewNodeTable().Update(node)
 				go requests.BroadcastNodeStatus(node)
 			}
-		} else {
-			// check if it is in peerstore
-			disconnected := false
-			for _, p := range p2p.DisconnectedPeers {
-				if p == node.PeerID {
-					disconnected = true
-					break
-				}
-			}
-			if disconnected {
-				common.Logger.Debug("Peer ", node.PeerID, " is disconnected")
-				// if disconnected, remove from node table
-				node.Status = "disconnected"
-				*lnt = *NewNodeTable().Update(node)
-			}
 		}
-
 	}
 }

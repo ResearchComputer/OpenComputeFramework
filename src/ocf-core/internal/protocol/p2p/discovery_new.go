@@ -13,13 +13,13 @@ import (
 	routing "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 )
 
-var discoverLockNew sync.Mutex
+var discoverLock sync.Mutex
 
 // DiscoverNew is a function that keeps updating DNT with the latest information about the network.
-func DiscoverNew(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
+func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
 	var disconnected []string
-	discoverLockNew.Lock()
-	defer discoverLockNew.Unlock()
+	discoverLock.Lock()
+	defer discoverLock.Unlock()
 	var routingDiscovery = routing.NewRoutingDiscovery(dht)
 	routingDiscovery.Advertise(ctx, rendezvous)
 	ticker := time.NewTicker(time.Second * 1)
@@ -36,7 +36,7 @@ func DiscoverNew(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous 
 					disconnected = append(disconnected, p.String())
 				}
 			}
-			GetNodeTable().RemoveDisconnectedPeer(disconnected)
+			GetNodeTable().RemoveDisconnectedPeers(disconnected)
 			peers, err := routingDiscovery.FindPeers(ctx, rendezvous)
 			if err != nil {
 				common.Logger.Error(err)
