@@ -82,10 +82,11 @@ func healthStatusCheck(c *gin.Context) {
 	peer, exist := c.GetQuery("peer")
 	if exist && peer == "1" {
 		peers := []string{}
-		for _, peer := range p2p.GetP2PNode().Peerstore().Peers() {
-			err := requests.CheckPeerStatus(peer.String())
+		dnt := p2p.GetNodeTable()
+		for _, peer := range dnt.Peers {
+			err := requests.CheckPeerStatus(peer.PeerID)
 			if err == nil {
-				peers = append(peers, peer.String())
+				peers = append(peers, peer.PeerID)
 			}
 		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "peers": peers})
