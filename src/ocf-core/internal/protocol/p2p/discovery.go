@@ -17,6 +17,10 @@ var discoverLock sync.Mutex
 
 // DiscoverNew is a function that keeps updating DNT with the latest information about the network.
 func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
+	GetNodeTable().Update(Peer{
+		PeerID: GetP2PNode().ID().String(),
+		Status: CONNECTED,
+	})
 	var disconnected []string
 	discoverLock.Lock()
 	defer discoverLock.Unlock()
@@ -36,7 +40,6 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 					disconnected = append(disconnected, p.String())
 				}
 			}
-			common.Logger.Debug("Disconnected peers: ", disconnected)
 			GetNodeTable().RemoveDisconnectedPeers(disconnected)
 			disconnected = []string{}
 			peers, err := routingDiscovery.FindPeers(ctx, rendezvous)
@@ -53,7 +56,6 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 						continue
 					}
 				}
-				common.Logger.Debug("Connectivity to peer: ", p.ID, " [", h.Network().Connectedness(p.ID), "] ")
 				if h.Network().Connectedness(p.ID) == network.Connected {
 					h.Peerstore().AddAddrs(p.ID, p.Addrs, peerstore.PermanentAddrTTL)
 					GetNodeTable().Update(Peer{

@@ -91,7 +91,7 @@ func SubscribeWorkerStatus() error {
 		lock.Lock()
 		// make sure the table is being updated by only one worker at a time
 		defer lock.Unlock()
-
+		common.Logger.Debug("Received worker status", "data", string(msg.Data))
 		var nodeStatus structs.NodeStatus
 		err := json.Unmarshal(msg.Data, &nodeStatus)
 		if err != nil {

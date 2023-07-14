@@ -11,16 +11,16 @@ import (
 
 func BroadcastPeerOffering(peer Peer) {
 	dnt := GetNodeTable()
+	common.Logger.Info("Broadcasting peer offering", "peer", peer)
 	for _, remote := range dnt.Peers {
 		if peer.PeerID != remote.PeerID {
-			// we don't need to update local node table as it is already updated
-			UpdateRemoteNodeTable(peer.PeerID, peer)
+			UpdateRemoteNodeTable(remote.PeerID, peer)
 		}
 	}
 }
 
 func UpdateRemoteNodeTable(peerId string, peer Peer) error {
-	remoteAddr := fmt.Sprintf("http://localhost:%s/api/v1/proxy/%s/api/v1/status/table", viper.GetString("port"), peerId)
+	remoteAddr := fmt.Sprintf("http://localhost:%s/api/v1/proxy/%s/api/v1/status/peers", viper.GetString("port"), peerId)
 	reqString, err := json.Marshal(peer)
 	if err != nil {
 		return err

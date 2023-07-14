@@ -95,19 +95,20 @@ func (dnt *NodeTable) RemoveDisconnectedPeers(disconnected []string) {
 }
 
 func (dnt *NodeTable) NewOffering(peerId string, newService string) {
-	for _, p := range dnt.Peers {
+	for idx, p := range dnt.Peers {
 		if p.PeerID == peerId {
-			p.Service = newService
-			dnt.Update(p)
+			dnt.Peers[idx].CurrentOffering = append(dnt.Peers[idx].CurrentOffering, newService)
+			BroadcastPeerOffering(dnt.Peers[idx])
+			break
 		}
 	}
 }
 
 func (dnt *NodeTable) UpdateNodeTable(peer Peer) {
-	for _, p := range dnt.Peers {
+	for idx, p := range dnt.Peers {
 		if p.PeerID == peer.PeerID {
-			p = peer
-			dnt.Update(p)
+			dnt.Peers[idx] = peer
+			break
 		}
 	}
 }
