@@ -217,8 +217,12 @@ func AddClusterNode(c *gin.Context) {
 
 // todo(xiaozhe): in future the internals will be migrated to rpc calls
 // this function receives a message from a peer and updates its workload table
-func UpdateWorkloadTable(c *gin.Context) {
-	var nodeStatus structs.NodeStatus
-	c.BindJSON(&nodeStatus)
-	queue.UpdateNodeTable(nodeStatus)
+// func UpdateWorkloadTable(c *gin.Context) {
+// 	var nodeStatus structs.NodeStatus
+// 	c.BindJSON(&nodeStatus)
+// 	queue.UpdateNodeTable(nodeStatus)
+// }
+
+func GetPeersInfo(c *gin.Context) {
+	c.JSON(http.StatusOK, p2p.GetNodeTable())
 }

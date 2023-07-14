@@ -1,6 +1,8 @@
 package p2p
 
-import "sync"
+import (
+	"sync"
+)
 
 var dntOnce sync.Once
 
@@ -45,27 +47,27 @@ var nodeTable *NodeTable
 
 func GetNodeTable() *NodeTable {
 	dntOnce.Do(func() {
-		nodeTable = &NodeTable{}
+		nodeTable = &NodeTable{Peers: []Peer{}}
 	})
 	return nodeTable
 }
 
-func (dnt NodeTable) Update(peer Peer) *NodeTable {
+func (dnt *NodeTable) Update(peer Peer) *NodeTable {
 	for idx, n := range dnt.Peers {
 		if n.PeerID == peer.PeerID {
-			if peer.Status == "disconnected" {
+			if peer.Status == DISCONNECTED {
 				dnt.Peers = append(dnt.Peers[:idx], dnt.Peers[idx+1:]...)
-				return &dnt
-			} else if peer.Status == "connected" {
+				return dnt
+			} else if peer.Status == CONNECTED {
 				dnt.Peers[idx] = peer
 			}
-			return &dnt
+			return dnt
 		}
 	}
-	if peer.Status == "connected" {
+	if peer.Status == CONNECTED {
 		dnt.Peers = append(dnt.Peers, peer)
 	}
-	return &dnt
+	return dnt
 }
 
 func (dnt NodeTable) FindProviders(service string) []Peer {

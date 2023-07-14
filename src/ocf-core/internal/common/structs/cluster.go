@@ -30,35 +30,3 @@ type NodeStatus struct {
 	Specs    []GPUSpec `json:"gpus"`
 	Service  string    `json:"service"`
 }
-
-type NodeTable struct {
-	Nodes []NodeStatus `json:"nodes"`
-}
-
-func (lnt NodeTable) Update(node NodeStatus) *NodeTable {
-	for idx, n := range lnt.Nodes {
-		if n.ClientID == node.ClientID && n.PeerID == node.PeerID {
-			if node.Status == "disconnected" {
-				lnt.Nodes = append(lnt.Nodes[:idx], lnt.Nodes[idx+1:]...)
-				return &lnt
-			} else if node.Status == "connected" {
-				lnt.Nodes[idx] = node
-			}
-			return &lnt
-		}
-	}
-	if node.Status == "connected" {
-		lnt.Nodes = append(lnt.Nodes, node)
-	}
-	return &lnt
-}
-
-func (lnt NodeTable) FindProviders(service string) []string {
-	var providers []string
-	for _, n := range lnt.Nodes {
-		if n.Service == service {
-			providers = append(providers, n.PeerID)
-		}
-	}
-	return providers
-}

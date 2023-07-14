@@ -59,7 +59,7 @@ func AutoInferenceRequest(c *gin.Context) {
 	randomIndex := rand.Intn(len(providers))
 	scapegoat := providers[randomIndex]
 	// now forward request to scapegoat
-	res, err := requests.ForwardInferenceRequest(scapegoat, request)
+	res, err := requests.ForwardInferenceRequest(scapegoat.PeerID, request)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 	}
