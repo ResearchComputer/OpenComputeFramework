@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"ocfcore/internal/common"
 	"sync"
 	"time"
 )
@@ -28,16 +29,17 @@ type HardwareSpec struct {
 
 // Peer is a single node in the network, as can be seen by the current node.
 type Peer struct {
-	PeerID          string         `json:"peer_id"`
-	Latency         int            `json:"latency"` // in ms
-	Privileged      bool           `json:"privileged"`
-	Owner           string         `json:"owner"`
-	CurrentOffering []string       `json:"current_offering"`
-	Hardware        []HardwareSpec `json:"hardware"`
-	Role            []string       `json:"role"`
-	Status          string         `json:"status"`
-	Service         string         `json:"service"`
-	LastSeen        int64          `json:"last_seen"`
+	PeerID            string         `json:"peer_id"`
+	Latency           int            `json:"latency"` // in ms
+	Privileged        bool           `json:"privileged"`
+	Owner             string         `json:"owner"`
+	CurrentOffering   []string       `json:"current_offering"`
+	Hardware          []HardwareSpec `json:"hardware"`
+	Role              []string       `json:"role"`
+	Status            string         `json:"status"`
+	AvailableOffering []string       `json:"available_offering"`
+	Service           string         `json:"service"`
+	LastSeen          int64          `json:"last_seen"`
 }
 
 // Node table tracks the nodes and their status in the network.
@@ -51,7 +53,6 @@ func GetNodeTable() *NodeTable {
 	dntOnce.Do(func() {
 		nodeTable = &NodeTable{Peers: []Peer{}}
 	})
-
 	return nodeTable
 }
 
@@ -75,9 +76,9 @@ func (dnt *NodeTable) Update(peer Peer) *NodeTable {
 
 func (dnt NodeTable) FindProviders(service string) []Peer {
 	var providers []Peer
-	for _, n := range dnt.Peers {
-		if n.Service == service {
-			providers = append(providers, n)
+	for _, p := range dnt.Peers {
+		if common.ContainsString(p.CurrentOffering, service) {
+			providers = append(providers, p)
 		}
 	}
 	return providers
@@ -89,6 +90,24 @@ func (dnt *NodeTable) RemoveDisconnectedPeers(disconnected []string) {
 			if p.PeerID == d {
 				dnt.Update(Peer{PeerID: p.PeerID, Status: DISCONNECTED})
 			}
+		}
+	}
+}
+
+func (dnt *NodeTable) NewOffering(peerId string, newService string) {
+	for _, p := range dnt.Peers {
+		if p.PeerID == peerId {
+			p.Service = newService
+			dnt.Update(p)
+		}
+	}
+}
+
+func (dnt *NodeTable) UpdateNodeTable(peer Peer) {
+	for _, p := range dnt.Peers {
+		if p.PeerID == peer.PeerID {
+			p = peer
+			dnt.Update(p)
 		}
 	}
 }

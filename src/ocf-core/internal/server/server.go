@@ -30,7 +30,7 @@ func StartServer() {
 			ocfcoreStatus.GET("/summary", GetSummary)
 			ocfcoreStatus.GET("/connections", GetConnections)
 			ocfcoreStatus.GET("/table", GetWorkloadTable)
-			// ocfcoreStatus.POST("/table", UpdateWorkloadTable)
+			ocfcoreStatus.POST("/peers", UpdatePeers)
 			ocfcoreStatus.GET("/peers", GetPeersInfo)
 		}
 		ocfcoreWs := v1.Group("/ws")

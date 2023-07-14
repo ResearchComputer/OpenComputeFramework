@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"ocfcore/internal/common"
-	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/protocol/p2p"
 	"sync"
@@ -99,9 +98,7 @@ func SubscribeWorkerStatus() error {
 			common.Logger.Error("Failed to unmarshal worker status", "error", err)
 		}
 		nodeStatus.PeerID = p2p.GetP2PNode().ID().String()
-		// table := NewNodeTable()
-		// *lnt = *table.Update(nodeStatus)
-		go requests.BroadcastNodeStatus(nodeStatus)
+		p2p.GetNodeTable().NewOffering(nodeStatus.PeerID, nodeStatus.Service)
 	})
 	return err
 }
@@ -118,47 +115,3 @@ func GetProvidedService() ([]string, error) {
 	}
 	return providedService, nil
 }
-
-// func UpdateNodeTable(nodeStatus structs.NodeStatus) {
-// 	*lnt = *NewNodeTable().Update(nodeStatus)
-// }
-
-// func RemovePeerFromNodeTable(peerID string) {
-// 	for _, node := range NewNodeTable().Nodes {
-// 		if node.PeerID == peerID {
-// 			node.Status = "disconnected"
-// 			*lnt = *NewNodeTable().Update(node)
-// 		}
-// 	}
-// }
-
-// func RemoveDisconnectedNode() {
-// 	natsServer := NewNatsServer()
-// 	p2pNode := p2p.GetP2PNode()
-// 	conn, err := natsServer.Connz(&server.ConnzOptions{Subscriptions: true, Offset: 1})
-// 	if err != nil {
-// 		common.Logger.Error("Failed to get connection status: ", err)
-// 		common.Logger.Error("If this persists, the node table will not be updated")
-// 		return
-// 	}
-// 	// two steps:
-// 	// for all nodes in lnt, check if my workers are still connected
-// 	for _, node := range NewNodeTable().Nodes {
-// 		// if it is the current node, then continue
-// 		if node.PeerID == p2pNode.ID().String() {
-// 			connected := false
-// 			for _, c := range conn.Conns {
-// 				if c.Cid == uint64(node.ClientID) {
-// 					connected = true
-// 					break
-// 				}
-// 			}
-// 			if !connected {
-// 				// if not connected, remove from node table
-// 				node.Status = "disconnected"
-// 				*lnt = *NewNodeTable().Update(node)
-// 				go requests.BroadcastNodeStatus(node)
-// 			}
-// 		}
-// 	}
-// }
