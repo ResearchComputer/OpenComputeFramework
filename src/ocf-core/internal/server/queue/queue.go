@@ -98,7 +98,11 @@ func SubscribeWorkerStatus() error {
 			common.Logger.Error("Failed to unmarshal worker status", "error", err)
 		}
 		nodeStatus.PeerID = p2p.GetP2PNode().ID().String()
-		p2p.GetNodeTable().NewOffering(nodeStatus.PeerID, nodeStatus.Service)
+		if nodeStatus.Status == "connected" {
+			p2p.GetNodeTable().NewOffering(nodeStatus.PeerID, nodeStatus.Service)
+		} else if nodeStatus.Status == "disconnected" {
+			p2p.GetNodeTable().RemoveOffering(nodeStatus.PeerID, nodeStatus.Service)
+		}
 	})
 	return err
 }

@@ -1,20 +1,20 @@
 import json
 import requests
 
-URL = "https://inference.autoai.dev/api/v1/request/inference"
+URL = "https://api.autoai.dev/inference"
 
 def inference():
     resp = requests.post(URL, json={
-        'model_name': 'togethercomputer/RedPajama-INCITE-7B-Chat',
+        'model': 'microsoft/deberta-large-mnli',
         'params': {
-            'prompt': "<human>: tell me about computer science?\n<bot>: ",
+            'prompt': "tell me about computer science?",
             'max_tokens': 32,
             'temperature': 0.7,
             'top_p': 1.0,
             'top_k': 40,
         }
     })
-    resp = resp.text
+    resp = resp.json()
     print(resp)
     return resp
 

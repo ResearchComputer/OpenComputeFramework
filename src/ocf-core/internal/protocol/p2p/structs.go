@@ -104,6 +104,16 @@ func (dnt *NodeTable) NewOffering(peerId string, newService string) {
 	}
 }
 
+func (dnt *NodeTable) RemoveOffering(peerId string, newService string) {
+	for idx, p := range dnt.Peers {
+		if p.PeerID == peerId {
+			dnt.Peers[idx].CurrentOffering = common.RemoveString(dnt.Peers[idx].CurrentOffering, newService)
+			BroadcastPeerOffering(dnt.Peers[idx])
+			break
+		}
+	}
+}
+
 func (dnt *NodeTable) UpdateNodeTable(peer Peer) {
 	for idx, p := range dnt.Peers {
 		if p.PeerID == peer.PeerID {
