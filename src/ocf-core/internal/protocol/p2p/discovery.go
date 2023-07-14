@@ -32,11 +32,13 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 			// cleaning disconnected peers
 			storedPeers := h.Peerstore().Peers()
 			for _, p := range storedPeers {
-				if h.Network().Connectedness(p) == network.NotConnected {
+				if p != h.ID() && h.Network().Connectedness(p) == network.NotConnected {
 					disconnected = append(disconnected, p.String())
 				}
 			}
+			common.Logger.Debug("Disconnected peers: ", disconnected)
 			GetNodeTable().RemoveDisconnectedPeers(disconnected)
+			disconnected = []string{}
 			peers, err := routingDiscovery.FindPeers(ctx, rendezvous)
 			if err != nil {
 				common.Logger.Error(err)
