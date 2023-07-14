@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"sync"
+	"time"
 )
 
 var dntOnce sync.Once
@@ -36,6 +37,7 @@ type Peer struct {
 	Role            []string       `json:"role"`
 	Status          string         `json:"status"`
 	Service         string         `json:"service"`
+	LastSeen        int64          `json:"last_seen"`
 }
 
 // Node table tracks the nodes and their status in the network.
@@ -49,17 +51,18 @@ func GetNodeTable() *NodeTable {
 	dntOnce.Do(func() {
 		nodeTable = &NodeTable{Peers: []Peer{}}
 	})
+
 	return nodeTable
 }
 
 func (dnt *NodeTable) Update(peer Peer) *NodeTable {
 	for idx, n := range dnt.Peers {
 		if n.PeerID == peer.PeerID {
+			dnt.Peers[idx].LastSeen = time.Now().Unix()
 			if peer.Status == DISCONNECTED {
-				dnt.Peers = append(dnt.Peers[:idx], dnt.Peers[idx+1:]...)
+				dnt.Peers[idx].Status = DISCONNECTED
+				dnt.Peers[idx].LastSeen = time.Now().Unix()
 				return dnt
-			} else if peer.Status == CONNECTED {
-				dnt.Peers[idx] = peer
 			}
 			return dnt
 		}
@@ -80,7 +83,7 @@ func (dnt NodeTable) FindProviders(service string) []Peer {
 	return providers
 }
 
-func (dnt NodeTable) RemoveDisconnectedPeers(disconnected []string) {
+func (dnt *NodeTable) RemoveDisconnectedPeers(disconnected []string) {
 	for _, p := range dnt.Peers {
 		for _, d := range disconnected {
 			if p.PeerID == d {
