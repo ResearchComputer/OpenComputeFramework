@@ -10,7 +10,7 @@ import (
 	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
 	"ocfcore/internal/profiler"
-	"ocfcore/internal/server/p2p"
+	"ocfcore/internal/protocol/p2p"
 	"ocfcore/internal/server/queue"
 	"strconv"
 	"time"
@@ -82,10 +82,11 @@ func healthStatusCheck(c *gin.Context) {
 	peer, exist := c.GetQuery("peer")
 	if exist && peer == "1" {
 		peers := []string{}
-		for _, peer := range p2p.GetP2PNode().Peerstore().Peers() {
-			err := requests.CheckPeerStatus(peer.String())
+		dnt := p2p.GetNodeTable()
+		for _, peer := range dnt.Peers {
+			err := requests.CheckPeerStatus(peer.PeerID)
 			if err == nil {
-				peers = append(peers, peer.String())
+				peers = append(peers, peer.PeerID)
 			}
 		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "peers": peers})
@@ -216,8 +217,12 @@ func AddClusterNode(c *gin.Context) {
 
 // todo(xiaozhe): in future the internals will be migrated to rpc calls
 // this function receives a message from a peer and updates its workload table
-func UpdateWorkloadTable(c *gin.Context) {
-	var nodeStatus structs.NodeStatus
-	c.BindJSON(&nodeStatus)
-	queue.UpdateNodeTable(nodeStatus)
+func UpdatePeers(c *gin.Context) {
+	var peer p2p.Peer
+	c.BindJSON(&peer)
+	p2p.GetNodeTable().UpdateNodeTable(peer)
+}
+
+func GetPeersInfo(c *gin.Context) {
+	c.JSON(http.StatusOK, p2p.GetNodeTable())
 }

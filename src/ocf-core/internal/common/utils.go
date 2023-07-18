@@ -8,3 +8,12 @@ func ContainsString(slice []string, item string) bool {
 	}
 	return false
 }
+
+func RemoveString(slice []string, item string) []string {
+	for idx, v := range slice {
+		if v == item {
+			return append(slice[:idx], slice[idx+1:]...)
+		}
+	}
+	return slice
+}

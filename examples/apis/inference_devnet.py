@@ -1,11 +1,11 @@
 import json
 import requests
 
-URL = "https://api.autoai.dev/inference"
+URL = "http://140.238.214.47:8092/api/v1/request/inference"
 
 def inference():
     resp = requests.post(URL, json={
-        'model': 'microsoft/deberta-large-mnli',
+        'model_name': 'microsoft/deberta-large-mnli',
         'params': {
             'prompt': "tell me about computer science?",
             'max_tokens': 32,
@@ -14,7 +14,7 @@ def inference():
             'top_k': 40,
         }
     })
-    resp = resp.json()
+    resp = resp.text
     print(resp)
     return resp
 

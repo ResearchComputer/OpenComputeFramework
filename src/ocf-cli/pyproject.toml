@@ -24,7 +24,11 @@ dependencies = [
   "huggingface-hub",
   "pynvml",
   "loguru",
-  "nats-py"
+  "nats-py",
+  "click",
+  "psutil",
+  "humanize",
+  "netifaces",
 ]
 
 [project.scripts]

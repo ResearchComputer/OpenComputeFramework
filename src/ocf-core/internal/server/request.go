@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"ocfcore/internal/common/requests"
 	"ocfcore/internal/common/structs"
+	"ocfcore/internal/protocol/p2p"
 	"ocfcore/internal/server/queue"
 
 	"github.com/gin-gonic/gin"
@@ -47,7 +48,7 @@ func AutoInferenceRequest(c *gin.Context) {
 		return
 	}
 	// find workers
-	table := queue.NewNodeTable()
+	table := p2p.GetNodeTable()
 	topic := "inference:" + request.UniqueModelName
 	providers := table.FindProviders(topic)
 	if len(providers) == 0 {
@@ -59,7 +60,7 @@ func AutoInferenceRequest(c *gin.Context) {
 	randomIndex := rand.Intn(len(providers))
 	scapegoat := providers[randomIndex]
 	// now forward request to scapegoat
-	res, err := requests.ForwardInferenceRequest(scapegoat, request)
+	res, err := requests.ForwardInferenceRequest(scapegoat.PeerID, request)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 	}
