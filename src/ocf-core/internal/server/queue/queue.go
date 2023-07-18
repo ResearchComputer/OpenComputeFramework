@@ -99,7 +99,10 @@ func SubscribeWorkerStatus() error {
 		}
 		nodeStatus.PeerID = p2p.GetP2PNode().ID().String()
 		if nodeStatus.Status == "connected" {
-			p2p.GetNodeTable().NewOffering(nodeStatus.PeerID, nodeStatus.Service)
+			hw := p2p.HardwareSpec{
+				GPUs: nodeStatus.Specs,
+			}
+			p2p.GetNodeTable().NewOffering(nodeStatus.PeerID, nodeStatus.Service, hw)
 		} else if nodeStatus.Status == "disconnected" {
 			p2p.GetNodeTable().RemoveOffering(nodeStatus.PeerID, nodeStatus.Service)
 		}

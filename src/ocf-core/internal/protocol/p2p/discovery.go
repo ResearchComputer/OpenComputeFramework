@@ -34,10 +34,16 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 			return
 		case <-ticker.C:
 			// cleaning disconnected peers
-			storedPeers := h.Peerstore().Peers()
-			for _, p := range storedPeers {
-				if p != h.ID() && h.Network().Connectedness(p) == network.NotConnected {
-					disconnected = append(disconnected, p.String())
+			dntPeers := GetNodeTable().Peers
+			for _, p := range dntPeers {
+				if p.PeerID != h.ID().String() {
+					storedPeers := h.Peerstore().Peers()
+					for _, sp := range storedPeers {
+						if p.PeerID == sp.String() && h.Network().Connectedness(sp) == network.NotConnected {
+							disconnected = append(disconnected, p.PeerID)
+							break
+						}
+					}
 				}
 			}
 			GetNodeTable().RemoveDisconnectedPeers(disconnected)

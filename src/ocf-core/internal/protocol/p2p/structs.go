@@ -62,6 +62,8 @@ func (dnt *NodeTable) Update(peer Peer) *NodeTable {
 			dnt.Peers[idx].LastSeen = time.Now().Unix()
 			if peer.Status == DISCONNECTED {
 				dnt.Peers[idx].Status = DISCONNECTED
+				dnt.Peers[idx].CurrentOffering = []string{}
+				dnt.Peers[idx].Hardware = []HardwareSpec{}
 				dnt.Peers[idx].LastSeen = time.Now().Unix()
 				return dnt
 			}
@@ -94,10 +96,11 @@ func (dnt *NodeTable) RemoveDisconnectedPeers(disconnected []string) {
 	}
 }
 
-func (dnt *NodeTable) NewOffering(peerId string, newService string) {
+func (dnt *NodeTable) NewOffering(peerId string, newService string, hardware HardwareSpec) {
 	for idx, p := range dnt.Peers {
 		if p.PeerID == peerId {
 			dnt.Peers[idx].CurrentOffering = append(dnt.Peers[idx].CurrentOffering, newService)
+			dnt.Peers[idx].Hardware = append(dnt.Peers[idx].Hardware, hardware)
 			BroadcastPeerOffering(dnt.Peers[idx])
 			break
 		}
@@ -108,6 +111,7 @@ func (dnt *NodeTable) RemoveOffering(peerId string, newService string) {
 	for idx, p := range dnt.Peers {
 		if p.PeerID == peerId {
 			dnt.Peers[idx].CurrentOffering = common.RemoveString(dnt.Peers[idx].CurrentOffering, newService)
+			dnt.Peers[idx].Hardware = []HardwareSpec{}
 			BroadcastPeerOffering(dnt.Peers[idx])
 			break
 		}

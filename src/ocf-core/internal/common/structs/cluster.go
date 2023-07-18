@@ -1,6 +1,9 @@
 package structs
 
-import "time"
+import (
+	"ocfcore/internal/protocol/p2p"
+	"time"
+)
 
 // Cluster is a lower-level interface from workers
 
@@ -16,17 +19,10 @@ type WarmedMachine struct {
 	StartedAt int64         `json:"started_at"`
 }
 
-type GPUSpec struct {
-	Name       string `json:"name"`
-	Memory     int64  `json:"memory"`
-	FreeMemory int64  `json:"memory_free"`
-	UsedMemory int64  `json:"memory_used"`
-}
-
 type NodeStatus struct {
-	PeerID   string    `json:"peer_id"`
-	ClientID int       `json:"client_id"`
-	Status   string    `json:"status"`
-	Specs    []GPUSpec `json:"gpus"`
-	Service  string    `json:"service"`
+	PeerID   string        `json:"peer_id"`
+	ClientID int           `json:"client_id"`
+	Status   string        `json:"status"`
+	Specs    []p2p.GPUSpec `json:"gpus"`
+	Service  string        `json:"service"`
 }
