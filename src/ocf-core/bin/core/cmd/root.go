@@ -32,7 +32,8 @@ var rootcmd = &cobra.Command{
 //nolint:gochecknoinits
 func init() {
 	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ocf/cfg.yaml)")
-	rootcmd.AddCommand(starocfcored)
+	startocfcore.Flags().String("wallet.account", "", "wallet account")
+	rootcmd.AddCommand(startocfcore)
 	rootcmd.AddCommand(versionCmd)
 	rootcmd.AddCommand(updateCmd)
 	rootcmd.AddCommand(clusterCmd)

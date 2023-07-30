@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var starocfcored = &cobra.Command{
+var startocfcore = &cobra.Command{
 	Use:   "start",
 	Short: "Start listening for incoming connections",
 	Run: func(cmd *cobra.Command, args []string) {

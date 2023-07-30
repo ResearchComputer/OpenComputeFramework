@@ -27,10 +27,36 @@ require (
 )
 
 require (
+	github.com/c-robinson/iplib v1.0.6 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/creachadair/otp v0.4.0 // indirect
+	github.com/google/btree v1.1.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
+	github.com/labstack/echo/v4 v4.10.2 // indirect
+	github.com/labstack/gommon v0.4.0 // indirect
+	github.com/libp2p/go-libp2p-pubsub v0.9.3 // indirect
+	github.com/libp2p/go-mplex v0.7.0 // indirect
+	github.com/libp2p/zeroconf/v2 v2.2.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
+	github.com/mudler/edgevpn v0.23.1 // indirect
+	github.com/mudler/water v0.0.0-20221010214108-8c7313014ce0 // indirect
 	github.com/nats-io/jwt/v2 v2.4.1 // indirect
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/songgao/packets v0.0.0-20160404182456-549a10cd4091 // indirect
+	github.com/urfave/cli v1.22.10 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/vishvananda/netlink v1.1.0 // indirect
+	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
 	golang.org/x/time v0.3.0 // indirect
+	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224 // indirect
+	golang.zx2c4.com/wireguard v0.0.0-20220703234212-c31a7b1ab478 // indirect
+	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (

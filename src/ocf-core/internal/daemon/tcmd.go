@@ -5,6 +5,7 @@ import (
 	"ocfcore/internal/server"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/spf13/viper"
 )
 
 func Start() {
@@ -18,7 +19,7 @@ func Start() {
 	if err != nil {
 		common.Logger.Error("sentry.Init: %s", err)
 	}
-
+	common.Logger.Info("Wallet: ", viper.Get("wallet.account"))
 	StartTicker()
 	server.StartServer()
 }

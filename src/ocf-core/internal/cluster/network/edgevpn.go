@@ -1,0 +1,5 @@
+package network
+
+func StartNetworkWeaver() {
+
+}

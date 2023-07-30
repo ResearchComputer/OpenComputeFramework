@@ -20,6 +20,7 @@ func BroadcastPeerOffering(peer Peer) {
 }
 
 func UpdateRemoteNodeTable(peerId string, peer Peer) error {
+	peer.Owner = viper.GetString("wallet.account")
 	remoteAddr := fmt.Sprintf("http://localhost:%s/api/v1/proxy/%s/api/v1/status/peers", viper.GetString("port"), peerId)
 	reqString, err := json.Marshal(peer)
 	if err != nil {
