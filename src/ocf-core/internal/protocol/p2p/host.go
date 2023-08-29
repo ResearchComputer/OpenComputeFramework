@@ -3,9 +3,10 @@ package p2p
 import (
 	"context"
 	"crypto/rand"
-	"io"
+	"fmt"
 	mrand "math/rand"
 	"ocfcore/internal/common"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
+	"github.com/spf13/viper"
 )
 
 var P2PNode *host.Host
@@ -24,7 +26,13 @@ func GetP2PNode() host.Host {
 	once.Do(func() {
 		ctx := context.Background()
 		var err error
-		host, err := newHost(ctx, 0)
+		seed := viper.GetString("seed")
+		// try to parse the seed as int64
+		seedInt, err := strconv.ParseInt(seed, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		host, err := newHost(ctx, seedInt)
 		P2PNode = &host
 		if err != nil {
 			panic(err)
@@ -42,26 +50,26 @@ func newHost(ctx context.Context, seed int64) (host.Host, error) {
 	if err != nil {
 		common.Logger.Error("Error while creating connection manager: %v", err)
 	}
-
+	var priv crypto.PrivKey
+	fmt.Println("seed: ", seed)
 	// try to load the private key from file
-	priv := loadKeyFromFile()
-	if priv == nil {
-		// if it doesn't exist, generate a new one
-		// If the seed is zero, use real cryptographic randomness. Otherwise, use a
-		// deterministic randomness source to make generated keys stay the same
-		// across multiple runs
-		var r io.Reader
-		if seed == 0 {
-			r = rand.Reader
-		} else {
-			r = mrand.New(mrand.NewSource(seed))
+	if seed == 0 {
+		// try to load from the file
+		priv = loadKeyFromFile()
+		if priv == nil {
+			r := rand.Reader
+			priv, _, err = crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+			if err != nil {
+				return nil, err
+			}
 		}
+	} else {
+		r := mrand.New(mrand.NewSource(seed))
 		priv, _, err = crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	// persist private key
 	writeKeyToFile(priv)
 	if err != nil {
