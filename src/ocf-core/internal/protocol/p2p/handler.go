@@ -28,6 +28,7 @@ func P2PListener() net.Listener {
 	}
 	dhtc.Bootstrap(ctx)
 	go Discover(ctx, host, dhtc, common.JSONVersion.Version+"/"+viper.GetString("bootstrap.rendezvous"))
+	common.Logger.Info("ocfcore Bootstrap Peers: ", getDefaultBootstrapPeers())
 	common.Logger.Info("ocfcore peer ID: ", host.ID())
 	common.Logger.Info("ocfcore peer Addr: ", host.Addrs())
 	listener, _ := gostream.Listen(host, p2phttp.DefaultP2PProtocol)
