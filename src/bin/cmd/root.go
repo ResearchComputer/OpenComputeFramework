@@ -34,6 +34,7 @@ func init() {
 	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ocf/cfg.yaml)")
 	startCmd.Flags().String("wallet.account", "", "wallet account")
 	startCmd.Flags().String("seed", "0", "Seed")
+	startCmd.Flags().String("mode", "node", "Mode (standalone, node)")
 	rootcmd.AddCommand(initCmd)
 	rootcmd.AddCommand(startCmd)
 	rootcmd.AddCommand(versionCmd)

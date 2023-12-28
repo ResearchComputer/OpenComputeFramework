@@ -14,11 +14,13 @@ import (
 	gocrdt "github.com/ipfs/go-ds-crdt"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/spf13/viper"
 )
 
 var (
 	pubsubTopic = "ocf-crdt"
 	pubsubKey   = "ocf-crdt"
+	pubsubNet   = "ocf-crdt-net"
 )
 var crdtStore *gocrdt.Datastore
 var once sync.Once
@@ -26,6 +28,7 @@ var cancelSubscriptions context.CancelFunc
 
 func GetCRDTStore() (*gocrdt.Datastore, context.CancelFunc) {
 	once.Do(func() {
+		mode := viper.GetString("mode")
 		host, dht := GetP2PNode(nil)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -39,7 +42,7 @@ func GetCRDTStore() (*gocrdt.Datastore, context.CancelFunc) {
 		psub, err := pubsub.NewGossipSub(ctx, host)
 		common.ReportError(err, "Error while creating pubsub")
 
-		topic, err := psub.Join(pubsubTopic)
+		topic, err := psub.Join(pubsubNet)
 		common.ReportError(err, "Error while joining pubsub topic")
 
 		netSubs, err := topic.Subscribe()
@@ -85,10 +88,12 @@ func GetCRDTStore() (*gocrdt.Datastore, context.CancelFunc) {
 		common.ReportError(err, "Error while creating crdt store")
 
 		common.Logger.Info("Bootstrapping...")
-		addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil)...)
+		addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil, mode)...)
 		common.ReportError(err, "Error while getting bootstrap peers")
 		ipfs.Bootstrap(addsInfo)
 		// h.ConnManager().TagPeer(inf.ID, "keep", 100)
+		common.Logger.Info("Peer ID: ", host.ID().Pretty())
+		common.Logger.Info("Listen Addr: ", host.Addrs())
 	})
 	return crdtStore, cancelSubscriptions
 }
