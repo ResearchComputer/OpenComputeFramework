@@ -31,5 +31,4 @@ func rewriteHeader() func(r *http.Response) error {
 		r.Header.Del("Access-Control-Allow-Headers")
 		return nil
 	}
-
 }

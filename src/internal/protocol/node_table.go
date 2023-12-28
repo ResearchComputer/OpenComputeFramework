@@ -1,7 +1,12 @@
 package protocol
 
 import (
+	"context"
+	"encoding/json"
+	"ocf/internal/common"
 	"sync"
+
+	ds "github.com/ipfs/go-datastore"
 )
 
 var dntOnce sync.Once
@@ -51,17 +56,29 @@ type NodeTable map[string]Peer
 
 var dnt *NodeTable
 
-func GetEmptyNodeTable() *NodeTable {
+func GetNodeTable() *NodeTable {
 	dntOnce.Do(func() {
 		dnt = &NodeTable{}
 	})
 	return dnt
 }
 
-func GetNodeTable() {
-
+func UpdateNodeTable(peer Peer) {
+	ctx := context.Background()
+	host, _ := GetP2PNode(nil)
+	// broadcast the peer to the network
+	store, pcancel := GetCRDTStore()
+	key := ds.NewKey(host.ID().String())
+	value, err := json.Marshal(peer)
+	common.ReportError(err, "Error while marshalling peer")
+	store.Put(ctx, key, value)
+	defer pcancel()
 }
 
-func UpdateService() {
-
+func UpdateNodeTableHook(key ds.Key, value []byte) {
+	table := *GetNodeTable()
+	var peer Peer
+	err := json.Unmarshal(value, &peer)
+	common.ReportError(err, "Error while unmarshalling peer")
+	table[key.String()] = peer
 }

@@ -28,6 +28,6 @@ func init() {
 // Logs an error and panics
 func ReportError(err error, msg string) {
 	if err != nil {
-		Logger.Error(msg, "error: ", err)
+		Logger.Error(msg, " error: ", err)
 	}
 }

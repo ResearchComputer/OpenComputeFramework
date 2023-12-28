@@ -7,8 +7,16 @@ import (
 )
 
 func listPeers(c *gin.Context) {
-	// crdtNode, cancelCtx := protocol.GetCRDTStore()
-	// defer cancelCtx()
 	addrs := protocol.ConnectedPeers()
 	c.JSON(200, gin.H{"peers": addrs})
+}
+
+func updateLocal(c *gin.Context) {
+	var peer protocol.Peer
+	c.BindJSON(&peer)
+	protocol.UpdateNodeTable(peer)
+}
+
+func getDNT(c *gin.Context) {
+	c.JSON(200, protocol.GetNodeTable())
 }

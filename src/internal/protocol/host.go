@@ -122,7 +122,7 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 
 // GetConnectedPeers returns the list of connected peers
 func ConnectedPeers() []*peer.AddrInfo {
-	var pinfos []*peer.AddrInfo
+	var pinfos []*peer.AddrInfo = []*peer.AddrInfo{}
 	host, _ := GetP2PNode(nil)
 	for _, c := range host.Network().Conns() {
 		pinfos = append(pinfos, &peer.AddrInfo{

@@ -20,9 +20,11 @@ func StartServer() {
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/health", healthStatusCheck)
-		crdtGroup := v1.Group("/crdt")
+		crdtGroup := v1.Group("/dnt")
 		{
+			crdtGroup.GET("/table", getDNT)
 			crdtGroup.GET("/peers", listPeers)
+			crdtGroup.POST("/_node", updateLocal)
 		}
 	}
 	wg.Wait()

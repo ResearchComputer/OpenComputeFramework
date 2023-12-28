@@ -29,9 +29,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 	once.Do(func() {
 		mode := viper.GetString("mode")
 		host, dht := GetP2PNode(nil)
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
+		ctx := context.Background()
 		store, err := badger.NewDatastore(common.GetDBPath(), &badger.DefaultOptions)
 		common.ReportError(err, "Error while creating datastore")
 
@@ -78,6 +76,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		opts.RebroadcastInterval = 5 * time.Second
 		opts.PutHook = func(k ds.Key, v []byte) {
 			fmt.Printf("Added: [%s] -> %s\n", k, string(v))
+			UpdateNodeTableHook(k, v)
 		}
 		opts.DeleteHook = func(k ds.Key) {
 			fmt.Printf("Removed: [%s]\n", k)
