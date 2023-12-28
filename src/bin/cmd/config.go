@@ -20,6 +20,7 @@ type Config struct {
 	Vacuum  VaccumConfig  `json:"vacuum" yaml:"vacuum"`
 	Queue   QueueConfig   `json:"queue" yaml:"queue"`
 	Account AccountConfig `json:"account" yaml:"account"`
+	Seed    string        `json:"seed" yaml:"seed"`
 }
 
 type AccountConfig struct {
@@ -27,6 +28,7 @@ type AccountConfig struct {
 }
 
 var defaultConfig = Config{
+	Seed:    "0",
 	Path:    "",
 	Port:    "8092",
 	Name:    "relay",

@@ -13,9 +13,7 @@ import (
 	crdt "github.com/ipfs/go-ds-crdt"
 	gocrdt "github.com/ipfs/go-ds-crdt"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/core/routing"
 )
 
 var (
@@ -26,15 +24,16 @@ var crdtStore *gocrdt.Datastore
 var once sync.Once
 var cancelSubscriptions context.CancelFunc
 
-func GetCRDTStore(host host.Host, dht routing.Routing) (*gocrdt.Datastore, context.CancelFunc) {
+func GetCRDTStore() (*gocrdt.Datastore, context.CancelFunc) {
 	once.Do(func() {
+		host, dht := GetP2PNode(nil)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
 		store, err := badger.NewDatastore(common.GetDBPath(), &badger.DefaultOptions)
 		common.ReportError(err, "Error while creating datastore")
 
-		ipfs, err := ipfslite.New(ctx, store, nil, host, dht, nil)
+		ipfs, err := ipfslite.New(ctx, store, nil, host, &dht, nil)
 		common.ReportError(err, "Error while creating ipfs lite node")
 
 		psub, err := pubsub.NewGossipSub(ctx, host)
@@ -90,7 +89,6 @@ func GetCRDTStore(host host.Host, dht routing.Routing) (*gocrdt.Datastore, conte
 		common.ReportError(err, "Error while getting bootstrap peers")
 		ipfs.Bootstrap(addsInfo)
 		// h.ConnManager().TagPeer(inf.ID, "keep", 100)
-
 	})
 	return crdtStore, cancelSubscriptions
 }

@@ -81,7 +81,7 @@ ifeq (${VERBOSE}, 1)
 endif
 
 	@mkdir -p ${BUILD_DIR}
-	GOARCH=arm64 go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/ ./bin/core...
+	GOARCH=arm64 go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/ ./bin...
 
 	@${MAKE} post-build
 
@@ -93,8 +93,8 @@ ifeq (${VERBOSE}, 1)
 endif
 
 	@mkdir -p ${BUILD_DIR}
-	go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./bin/core...
-
+	go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./bin... 
+	mv ${BUILD_DIR}/bin ${BUILD_DIR}/ocf
 	@${MAKE} post-build
 
 .PHONY: build-release-deps
@@ -162,14 +162,6 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 	@mkdir -p bin
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
-
-.PHONY: lint
-lint: bin/golangci-lint ## Run linter
-	bin/golangci-lint run --timeout=5m
-
-.PHONY: fix
-fix: bin/golangci-lint ## Fix lint violations
-	bin/golangci-lint run --fix
 
 release-%: TAG_PREFIX = v
 release-%:
