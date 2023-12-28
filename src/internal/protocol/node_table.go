@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"sync"
-	"time"
 )
 
 var dntOnce sync.Once
@@ -34,7 +33,6 @@ type Service struct {
 
 // Peer is a single node in the network, as can be seen by the current node.
 type Peer struct {
-	PeerID            string    `json:"peer_id"`
 	Latency           int       `json:"latency"` // in ms
 	Privileged        bool      `json:"privileged"`
 	Owner             string    `json:"owner"`
@@ -48,66 +46,22 @@ type Peer struct {
 }
 
 // Node table tracks the nodes and their status in the network.
-type NodeTable struct {
-	Peers []Peer `json:"peers"`
-}
+// This is also a
+type NodeTable map[string]Peer
 
-var nodeTable *NodeTable
+var dnt *NodeTable
 
-func GetNodeTable() *NodeTable {
+func GetEmptyNodeTable() *NodeTable {
 	dntOnce.Do(func() {
-		nodeTable = &NodeTable{Peers: []Peer{}}
+		dnt = &NodeTable{}
 	})
-	return nodeTable
-}
-
-func (dnt *NodeTable) Update(peer Peer) *NodeTable {
-	for idx, n := range dnt.Peers {
-		if n.PeerID == peer.PeerID {
-			dnt.Peers[idx].LastSeen = time.Now().Unix()
-			if peer.Status == DISCONNECTED {
-				dnt.Peers[idx].Status = DISCONNECTED
-				dnt.Peers[idx].CurrentOffering = []string{}
-				dnt.Peers[idx].Service = []Service{}
-				dnt.Peers[idx].LastSeen = time.Now().Unix()
-				return dnt
-			}
-			return dnt
-		}
-	}
-	if peer.Status == CONNECTED {
-		dnt.Peers = append(dnt.Peers, peer)
-	}
 	return dnt
 }
 
-func (dnt NodeTable) FindProviders(service string) []Peer {
-	var providers []Peer
-	for _, p := range dnt.Peers {
-		for _, s := range p.Service {
-			if s.Name == service {
-				providers = append(providers, p)
-			}
-		}
-	}
-	return providers
+func GetNodeTable() {
+
 }
 
-func (dnt *NodeTable) RemoveDisconnectedPeers(disconnected []string) {
-	for _, p := range dnt.Peers {
-		for _, d := range disconnected {
-			if p.PeerID == d {
-				dnt.Update(Peer{PeerID: p.PeerID, Status: DISCONNECTED})
-			}
-		}
-	}
-}
+func UpdateService() {
 
-func (dnt *NodeTable) UpdateNodeTable(peer Peer) {
-	for idx, p := range dnt.Peers {
-		if p.PeerID == peer.PeerID {
-			dnt.Peers[idx] = peer
-			break
-		}
-	}
 }

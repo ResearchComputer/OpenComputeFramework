@@ -11,7 +11,6 @@ import (
 	ds "github.com/ipfs/go-datastore"
 	badger "github.com/ipfs/go-ds-badger"
 	crdt "github.com/ipfs/go-ds-crdt"
-	gocrdt "github.com/ipfs/go-ds-crdt"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/viper"
@@ -22,11 +21,11 @@ var (
 	pubsubKey   = "ocf-crdt"
 	pubsubNet   = "ocf-crdt-net"
 )
-var crdtStore *gocrdt.Datastore
+var crdtStore *crdt.Datastore
 var once sync.Once
 var cancelSubscriptions context.CancelFunc
 
-func GetCRDTStore() (*gocrdt.Datastore, context.CancelFunc) {
+func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 	once.Do(func() {
 		mode := viper.GetString("mode")
 		host, dht := GetP2PNode(nil)
@@ -92,6 +91,7 @@ func GetCRDTStore() (*gocrdt.Datastore, context.CancelFunc) {
 		common.ReportError(err, "Error while getting bootstrap peers")
 		ipfs.Bootstrap(addsInfo)
 		// h.ConnManager().TagPeer(inf.ID, "keep", 100)
+		common.Logger.Info("Mode: ", mode)
 		common.Logger.Info("Peer ID: ", host.ID().Pretty())
 		common.Logger.Info("Listen Addr: ", host.Addrs())
 	})
