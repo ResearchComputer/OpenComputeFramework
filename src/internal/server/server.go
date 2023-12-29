@@ -1,6 +1,8 @@
 package server
 
 import (
+	"net/http"
+	"ocf/internal/common"
 	"ocf/internal/protocol"
 	"sync"
 
@@ -26,7 +28,20 @@ func StartServer() {
 			crdtGroup.GET("/peers", listPeers)
 			crdtGroup.POST("/_node", updateLocal)
 		}
+		proxyGroup := v1.Group("/proxy")
+		{
+			proxyGroup.PATCH("/:peerId/*path", ForwardHandler)
+			proxyGroup.POST("/:peerId/*path", ForwardHandler)
+			proxyGroup.GET("/:peerId/*path", ForwardHandler)
+		}
 	}
+	p2plistener := P2PListener()
+	go func() {
+		err := http.Serve(p2plistener, r)
+		if err != nil {
+			common.Logger.Error("http.Serve: %s", err)
+		}
+	}()
 	wg.Wait()
 	err := r.Run("0.0.0.0:" + viper.GetString("port"))
 	if err != nil {
