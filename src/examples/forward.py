@@ -1,6 +1,7 @@
 import requests
 
 endpoint = "http://140.238.223.13:8092"
+peerId = "QmVVw6oykwy8q1siFBd7vdJ9hod2qkTJHHEqxajeUd4Y3N"
 
 def test_forward():
     peer = {
@@ -10,7 +11,7 @@ def test_forward():
             "hardware": []
         }]
     }
-    res = requests.get(endpoint + "/v1/service/triteia/metrics", json=peer)
+    res = requests.get(endpoint + f"/v1/p2p/{peerId}/v1/service/triteia/metrics", json=peer)
     print(res.text)
 
 test_forward()

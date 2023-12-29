@@ -32,7 +32,7 @@ func P2PForwardHandler(c *gin.Context) {
 	tr.RegisterProtocol("libp2p", p2phttp.NewTransport(node))
 	target := url.URL{
 		Scheme: "libp2p",
-		Host:   requestPeer + ":9000",
+		Host:   requestPeer,
 		Path:   requestPath,
 	}
 	common.Logger.Info("Forwarding request to %s", target.String())
