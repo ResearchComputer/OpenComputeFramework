@@ -28,11 +28,17 @@ func StartServer() {
 			crdtGroup.GET("/peers", listPeers)
 			crdtGroup.POST("/_node", updateLocal)
 		}
-		proxyGroup := v1.Group("/proxy")
+		p2pGroup := v1.Group("/p2p")
 		{
-			proxyGroup.PATCH("/:peerId/*path", ForwardHandler)
-			proxyGroup.POST("/:peerId/*path", ForwardHandler)
-			proxyGroup.GET("/:peerId/*path", ForwardHandler)
+			p2pGroup.PATCH("/:peerId/*path", P2PForwardHandler)
+			p2pGroup.POST("/:peerId/*path", P2PForwardHandler)
+			p2pGroup.GET("/:peerId/*path", P2PForwardHandler)
+		}
+		serviceGroup := v1.Group("/service")
+		{
+			serviceGroup.GET("/:service/*path", ServiceForwardHandler)
+			serviceGroup.POST("/:service/*path", ServiceForwardHandler)
+			serviceGroup.PATCH("/:service/*path", ServiceForwardHandler)
 		}
 	}
 	p2plistener := P2PListener()

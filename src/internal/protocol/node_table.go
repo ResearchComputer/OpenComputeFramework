@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"ocf/internal/common"
 	"sync"
 
@@ -34,6 +35,7 @@ type Service struct {
 	Name     string         `json:"name"`
 	Hardware []HardwareSpec `json:"hardware"`
 	Status   string         `json:"status"`
+	Port     string         `json:"port"`
 }
 
 // Peer is a single node in the network, as can be seen by the current node.
@@ -81,4 +83,22 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 	err := json.Unmarshal(value, &peer)
 	common.ReportError(err, "Error while unmarshalling peer")
 	table[key.String()] = peer
+}
+
+func GetService(name string) (Service, error) {
+	host, _ := GetP2PNode(nil)
+	store, pcancel := GetCRDTStore()
+	defer pcancel()
+	key := ds.NewKey(host.ID().String())
+	value, err := store.Get(context.Background(), key)
+	common.ReportError(err, "Error while getting peer")
+	var peer Peer
+	err = json.Unmarshal(value, &peer)
+	common.ReportError(err, "Error while unmarshalling peer")
+	for _, service := range peer.Service {
+		if service.Name == name {
+			return service, nil
+		}
+	}
+	return Service{}, errors.New("Service not found")
 }

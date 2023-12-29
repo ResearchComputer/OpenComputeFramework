@@ -5,9 +5,10 @@ endpoint = "http://localhost:8092"
 def update_peer():
     peer = {
         "service": [{
-            "name": "dnt",
+            "name": "triteia",
             "status": "online",
-            "hardware": []
+            "hardware": [],
+            "port": "8000",
         }]
     }
     res = requests.post(endpoint + "/v1/dnt/_node", json=peer)

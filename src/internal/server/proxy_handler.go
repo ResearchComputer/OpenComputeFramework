@@ -18,8 +18,8 @@ func ErrorHandler(res http.ResponseWriter, req *http.Request, err error) {
 	res.Write([]byte(fmt.Sprintf("ERROR: %s", err.Error())))
 }
 
-// Forward Handler
-func ForwardHandler(c *gin.Context) {
+// P2P handler for forwarding requests to other peers
+func P2PForwardHandler(c *gin.Context) {
 	requestPeer := c.Param("peerId")
 	requestPath := c.Param("path")
 	body, err := io.ReadAll(c.Request.Body)
@@ -49,5 +49,34 @@ func ForwardHandler(c *gin.Context) {
 	proxy.Transport = tr
 	proxy.ErrorHandler = ErrorHandler
 	proxy.ModifyResponse = rewriteHeader()
+	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+// ServiceHandler
+func ServiceForwardHandler(c *gin.Context) {
+	serviceName := c.Param("service")
+	requestPath := c.Param("path")
+	service, err := protocol.GetService(serviceName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	target := url.URL{
+		Scheme: "http",
+		Host:   "127.0.0.1:" + service.Port,
+		Path:   requestPath,
+	}
+	director := func(req *http.Request) {
+		req.Host = target.Host
+		req.URL.Host = req.Host
+		req.URL.Scheme = target.Scheme
+		req.URL.Path = target.Path
+		req.Body = io.NopCloser(bytes.NewBuffer(body))
+	}
+	proxy := httputil.NewSingleHostReverseProxy(&target)
+	proxy.Director = director
 	proxy.ServeHTTP(c.Writer, c.Request)
 }

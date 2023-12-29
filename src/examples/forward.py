@@ -1,16 +1,16 @@
 import requests
 
-endpoint = "http://localhost:8092"
+endpoint = "http://140.238.223.13:8092"
 
 def test_forward():
     peer = {
         "service": [{
-            "name": "dnt",
+            "name": "triteia",
             "status": "online",
             "hardware": []
         }]
     }
-    res = requests.post(endpoint + "/v1/proxy/QmWxgDBrscNmiURmba196goATfG6fHrMniNDMei13YTCay/v1/chat", json=peer)
-    print(res.json())
+    res = requests.get(endpoint + "/v1/service/triteia/metrics", json=peer)
+    print(res.text)
 
 test_forward()
