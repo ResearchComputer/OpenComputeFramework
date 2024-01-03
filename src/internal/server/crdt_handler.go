@@ -17,6 +17,12 @@ func updateLocal(c *gin.Context) {
 	protocol.UpdateNodeTable(peer)
 }
 
+func deleteLocal(c *gin.Context) {
+	var peer protocol.Peer
+	c.BindJSON(&peer)
+	protocol.DeleteNodeTable()
+}
+
 func getDNT(c *gin.Context) {
 	c.JSON(200, protocol.GetNodeTable())
 }

@@ -1,19 +1,25 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"ocf/internal/common"
 	"ocf/internal/protocol"
-	"sync"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
 
 func StartServer() {
-	var wg sync.WaitGroup
+
 	_, cancelCtx := protocol.GetCRDTStore()
 	defer cancelCtx()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	// gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Use(corsHeader())
@@ -27,6 +33,7 @@ func StartServer() {
 			crdtGroup.GET("/table", getDNT)
 			crdtGroup.GET("/peers", listPeers)
 			crdtGroup.POST("/_node", updateLocal)
+			crdtGroup.DELETE("/_node", deleteLocal)
 		}
 		p2pGroup := v1.Group("/p2p")
 		{
@@ -48,15 +55,28 @@ func StartServer() {
 		}
 	}
 	p2plistener := P2PListener()
+	srv := &http.Server{
+		Addr:    "0.0.0.0:" + viper.GetString("port"),
+		Handler: r,
+	}
 	go func() {
 		err := http.Serve(p2plistener, r)
 		if err != nil {
 			common.Logger.Error("http.Serve: %s", err)
 		}
 	}()
-	wg.Wait()
-	err := r.Run("0.0.0.0:" + viper.GetString("port"))
-	if err != nil {
-		panic(err)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			common.ReportError(err, "Server failed to start")
+		}
+	}()
+	<-ctx.Done()
+	// shutting down...
+	protocol.DeleteNodeTable()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		common.ReportError(err, "Server shutdown failed")
 	}
+	common.Logger.Info("Server exiting")
 }

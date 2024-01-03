@@ -1,0 +1,13 @@
+[Unit]
+Description=Open Compute Framework Daemon
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/home/ubuntu/ocf start --mode standalone
+# optional items below
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

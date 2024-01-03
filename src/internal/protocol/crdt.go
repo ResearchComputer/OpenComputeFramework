@@ -80,6 +80,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		}
 		opts.DeleteHook = func(k ds.Key) {
 			fmt.Printf("Removed: [%s]\n", k)
+			DeleteNodeTableHook(k)
 		}
 
 		crdtStore, err = crdt.New(store, ds.NewKey(pubsubKey), ipfs, pubsubBC, opts)

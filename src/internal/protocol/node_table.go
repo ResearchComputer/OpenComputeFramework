@@ -82,12 +82,27 @@ func UpdateNodeTable(peer Peer) {
 	defer pcancel()
 }
 
+func DeleteNodeTable() {
+	ctx := context.Background()
+	host, _ := GetP2PNode(nil)
+	// broadcast the peer to the network
+	store, pcancel := GetCRDTStore()
+	key := ds.NewKey(host.ID().String())
+	store.Delete(ctx, key)
+	defer pcancel()
+}
+
 func UpdateNodeTableHook(key ds.Key, value []byte) {
 	table := *GetNodeTable()
 	var peer Peer
 	err := json.Unmarshal(value, &peer)
 	common.ReportError(err, "Error while unmarshalling peer")
 	table[key.String()] = peer
+}
+
+func DeleteNodeTableHook(key ds.Key) {
+	table := *GetNodeTable()
+	delete(table, key.String())
 }
 
 func GetService(name string) (Service, error) {
