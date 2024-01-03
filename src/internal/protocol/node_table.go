@@ -36,10 +36,15 @@ type Service struct {
 	Hardware []HardwareSpec `json:"hardware"`
 	Status   string         `json:"status"`
 	Port     string         `json:"port"`
+	// IdentityGroup is a list of identities that can access this service
+	// Format: <identity_group_name>=<identity_name>
+	// e.g., "model=resnet50"
+	IdentityGroup []string `json:"identity_group"`
 }
 
 // Peer is a single node in the network, as can be seen by the current node.
 type Peer struct {
+	ID                string    `json:"id"`
 	Latency           int       `json:"latency"` // in ms
 	Privileged        bool      `json:"privileged"`
 	Owner             string    `json:"owner"`
@@ -53,7 +58,6 @@ type Peer struct {
 }
 
 // Node table tracks the nodes and their status in the network.
-// This is also a
 type NodeTable map[string]Peer
 
 var dnt *NodeTable
@@ -71,6 +75,7 @@ func UpdateNodeTable(peer Peer) {
 	// broadcast the peer to the network
 	store, pcancel := GetCRDTStore()
 	key := ds.NewKey(host.ID().String())
+	peer.ID = host.ID().String()
 	value, err := json.Marshal(peer)
 	common.ReportError(err, "Error while marshalling peer")
 	store.Put(ctx, key, value)
@@ -101,4 +106,20 @@ func GetService(name string) (Service, error) {
 		}
 	}
 	return Service{}, errors.New("Service not found")
+}
+
+func GetAllProviders(serviceName string) ([]Peer, error) {
+	var providers []Peer
+	table := *GetNodeTable()
+	for _, peer := range table {
+		for _, service := range peer.Service {
+			if service.Name == serviceName {
+				providers = append(providers, peer)
+			}
+		}
+	}
+	if len(providers) == 0 {
+		return providers, errors.New("no providers found")
+	}
+	return providers, nil
 }

@@ -34,7 +34,13 @@ func StartServer() {
 			p2pGroup.POST("/:peerId/*path", P2PForwardHandler)
 			p2pGroup.GET("/:peerId/*path", P2PForwardHandler)
 		}
-		serviceGroup := v1.Group("/service")
+		globalServiceGroup := v1.Group("/service")
+		{
+			globalServiceGroup.GET("/:service/*path", GlobalServiceForwardHandler)
+			globalServiceGroup.POST("/:service/*path", GlobalServiceForwardHandler)
+			globalServiceGroup.PATCH("/:service/*path", GlobalServiceForwardHandler)
+		}
+		serviceGroup := v1.Group("/_service")
 		{
 			serviceGroup.GET("/:service/*path", ServiceForwardHandler)
 			serviceGroup.POST("/:service/*path", ServiceForwardHandler)
