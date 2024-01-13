@@ -8,19 +8,17 @@ export default defineConfig({
 			title: 'Open Compute Framework',
 			social: {
 				github: 'https://github.com/autoai-org/opencomputeframework',
+				discord: 'https://discord.gg/PgGb4z4Jve',
 			},
 			sidebar: [
 				{
 					label: 'Guides',
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', link: '/guides/example/' },
+						{ label: "Introduction", link: "/guides/intro/" },
+						{ label: 'ML Inference', link: '/guides/ml_inference/' },
 					],
-				},
-				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
-				},
+				}
+
 			],
 		}),
 	],
