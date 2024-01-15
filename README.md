@@ -1,3 +1,3 @@
 -- Open Compute Framework --
 
-Documentation: https://ocf.autoai.org
+Documentation: https://docs.research.computer
