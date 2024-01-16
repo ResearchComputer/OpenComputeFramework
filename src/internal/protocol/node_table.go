@@ -76,6 +76,12 @@ func UpdateNodeTable(peer Peer) {
 	store, pcancel := GetCRDTStore()
 	key := ds.NewKey(host.ID().String())
 	peer.ID = host.ID().String()
+	// merge services instead of overwriting
+	// first find the peer in the table if it exists
+	existingPeer, err := GetPeerFromTable(peer.ID)
+	if err == nil {
+		peer.Service = append(peer.Service, existingPeer.Service...)
+	}
 	value, err := json.Marshal(peer)
 	common.ReportError(err, "Error while marshalling peer")
 	store.Put(ctx, key, value)
@@ -103,6 +109,15 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 func DeleteNodeTableHook(key ds.Key) {
 	table := *GetNodeTable()
 	delete(table, key.String())
+}
+
+func GetPeerFromTable(peerId string) (Peer, error) {
+	table := *GetNodeTable()
+	peer, ok := table[peerId]
+	if !ok {
+		return Peer{}, errors.New("peer not found")
+	}
+	return peer, nil
 }
 
 func GetService(name string) (Service, error) {

@@ -7,13 +7,10 @@ import (
 
 var (
 	// Populated during build
-	version      = "dev"
-	commitHash   = "?"
-	buildDate    = ""
-	authUrl      = ""
-	authClientId = ""
-	authSecret   = ""
-	sentryDSN    = ""
+	version     = "dev"
+	commitHash  = "?"
+	buildDate   = ""
+	buildSecret = ""
 )
 
 func main() {
