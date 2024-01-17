@@ -3,7 +3,6 @@ package protocol
 import (
 	"context"
 	"crypto/rand"
-	"fmt"
 	mrand "math/rand"
 	"ocf/internal/common"
 	"strconv"
@@ -52,15 +51,14 @@ func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 
 func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host, error) {
 	connmgr, err := connmgr.NewConnManager(
-		100, // Lowwater
-		400, // HighWater,
+		100,   // Lowwater
+		10000, // HighWater,
 		connmgr.WithGracePeriod(time.Minute),
 	)
 	if err != nil {
 		common.Logger.Error("Error while creating connection manager: %v", err)
 	}
 	var priv crypto.PrivKey
-	fmt.Println("seed: ", seed)
 	// try to load the private key from file
 	if seed == 0 {
 		// try to load from the file
@@ -106,6 +104,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 	}
 	return libp2p.New(opts...)
 }
+
 func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.DHT, error) {
 	dhtOpts := []dualdht.Option{
 		dualdht.DHTOption(dht.NamespacedValidator("pk", record.PublicKeyValidator{})),
