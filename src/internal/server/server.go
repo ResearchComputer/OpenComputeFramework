@@ -24,7 +24,7 @@ func StartServer() {
 	r := gin.Default()
 	r.Use(corsHeader())
 	r.Use(gin.Recovery())
-
+	go protocol.StartTicker()
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/health", healthStatusCheck)

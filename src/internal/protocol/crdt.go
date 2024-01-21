@@ -21,6 +21,7 @@ var (
 	pubsubKey   = "ocf-crdt"
 	pubsubNet   = "ocf-crdt-net"
 )
+var ipfs *ipfslite.Peer
 var crdtStore *crdt.Datastore
 var once sync.Once
 var cancelSubscriptions context.CancelFunc
@@ -33,7 +34,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		store, err := badger.NewDatastore(common.GetDBPath(), &badger.DefaultOptions)
 		common.ReportError(err, "Error while creating datastore")
 
-		ipfs, err := ipfslite.New(ctx, store, nil, host, &dht, nil)
+		ipfs, err = ipfslite.New(ctx, store, nil, host, &dht, nil)
 		common.ReportError(err, "Error while creating ipfs lite node")
 
 		psub, err := pubsub.NewGossipSub(ctx, host)
@@ -90,10 +91,18 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil, mode)...)
 		common.ReportError(err, "Error while getting bootstrap peers")
 		ipfs.Bootstrap(addsInfo)
+		common.ReportError(err, "Error while starting ticker")
 		// h.ConnManager().TagPeer(inf.ID, "keep", 100)
 		common.Logger.Info("Mode: ", mode)
 		common.Logger.Info("Peer ID: ", host.ID().Pretty())
 		common.Logger.Info("Listen Addr: ", host.Addrs())
 	})
 	return crdtStore, cancelSubscriptions
+}
+
+func Reconnect() {
+	mode := viper.GetString("mode")
+	addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil, mode)...)
+	common.ReportError(err, "Error while getting bootstrap peers")
+	ipfs.Bootstrap(addsInfo)
 }
