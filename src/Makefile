@@ -79,10 +79,9 @@ arm: goversion
 ifeq (${VERBOSE}, 1)
 	go env
 endif
-
 	@mkdir -p ${BUILD_DIR}
-	GOARCH=arm64 go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/ ./bin...
-
+	GOARCH=arm64 go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./bin...
+	mv ${BUILD_DIR}/bin ${BUILD_DIR}/ocf-arm
 	@${MAKE} post-build
 
 .PHONY: build
@@ -94,7 +93,7 @@ endif
 
 	@mkdir -p ${BUILD_DIR}
 	go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./bin... 
-	mv ${BUILD_DIR}/bin ${BUILD_DIR}/ocf
+	mv ${BUILD_DIR}/bin ${BUILD_DIR}/ocf-amd64
 	@${MAKE} post-build
 
 .PHONY: build-release-deps

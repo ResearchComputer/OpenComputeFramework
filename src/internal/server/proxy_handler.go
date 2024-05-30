@@ -69,7 +69,7 @@ func ServiceForwardHandler(c *gin.Context) {
 	}
 	target := url.URL{
 		Scheme: "http",
-		Host:   "127.0.0.1:" + service.Port,
+		Host:   service.Host + ":" + service.Port,
 		Path:   requestPath,
 	}
 	director := func(req *http.Request) {

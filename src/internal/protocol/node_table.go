@@ -35,6 +35,7 @@ type Service struct {
 	Name     string         `json:"name"`
 	Hardware []HardwareSpec `json:"hardware"`
 	Status   string         `json:"status"`
+	Host     string         `json:"host"`
 	Port     string         `json:"port"`
 	// IdentityGroup is a list of identities that can access this service
 	// Format: <identity_group_name>=<identity_name>
