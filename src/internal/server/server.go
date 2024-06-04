@@ -17,7 +17,7 @@ func StartServer() {
 
 	_, cancelCtx := protocol.GetCRDTStore()
 	defer cancelCtx()
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	defer stop()
 
 	// gin.SetMode(gin.ReleaseMode)
