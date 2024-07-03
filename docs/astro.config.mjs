@@ -16,6 +16,7 @@ export default defineConfig({
 					items: [
 						{ label: "Introduction", link: "/guides/intro/" },
 						{ label: 'ML Inference', link: '/guides/ml_inference/' },
+						{ label: 'Deployment', link: '/guides/spinup/' },
 					],
 				}
 

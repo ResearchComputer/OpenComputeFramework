@@ -33,6 +33,7 @@ var rootcmd = &cobra.Command{
 func init() {
 	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ocf/cfg.yaml)")
 	startCmd.Flags().String("wallet.account", "", "wallet account")
+	startCmd.Flags().StringSlice("bootstrap.addr", []string{}, "bootstrap address")
 	startCmd.Flags().String("seed", "0", "Seed")
 	startCmd.Flags().String("mode", "node", "Mode (standalone, local, full)")
 	rootcmd.AddCommand(initCmd)
