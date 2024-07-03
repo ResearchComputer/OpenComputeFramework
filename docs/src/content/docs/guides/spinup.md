@@ -96,3 +96,19 @@ To connect the workers to the global dispatcher, you need to start the workers (
 ```bash
 ./build/ocf-amd64 start --bootstrap.addr=/ip4/<ip addr of global dispatcher>/tcp/43905/p2p/<Peer ID of global dispatcher>
 ```
+
+Once connected, you can view all connected workers by visiting the following URL in your browser: http://<ip addr of global dispatcher>:8092/v1/dnt/peers.
+
+
+## Next Steps
+
+You have successfully spun up a new global dispatcher and connected workers to it. You can now start using the global dispatcher to route requests to the workers. For example, to use OpenAI-compatible APIs, you can setup the OpenAI Client as:
+
+```
+client = OpenAI(
+    base_url = "http://<ip addr of global dispatcher>:8092/v1/service/triteia/v1",
+    api_key = "sk-1234567",
+)
+```
+
+(triteia is an old name of a ML inference service, and it is used as an example here. You can replace it with the actual service name.)
