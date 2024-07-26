@@ -21,6 +21,8 @@ type Config struct {
 	Queue   QueueConfig   `json:"queue" yaml:"queue"`
 	Account AccountConfig `json:"account" yaml:"account"`
 	Seed    string        `json:"seed" yaml:"seed"`
+	TCPPort string        `json:"tcp_port" yaml:"tcp_port"`
+	UDPPort string        `json:"udp_port" yaml:"udp_port"`
 }
 
 type AccountConfig struct {
@@ -32,6 +34,8 @@ var defaultConfig = Config{
 	Path:    "",
 	Port:    "8092",
 	Name:    "relay",
+	TCPPort: "43905",
+	UDPPort: "59820",
 	P2p:     P2PConfig{Port: "8093"},
 	Vacuum:  VaccumConfig{Interval: 10},
 	Queue:   QueueConfig{Port: "8094"},

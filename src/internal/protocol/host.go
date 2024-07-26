@@ -22,7 +22,6 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/spf13/viper"
 )
 
@@ -88,8 +87,9 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 		libp2p.ConnectionManager(connmgr),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/tcp/43905",
-			"/ip4/0.0.0.0/udp/59820/quic",
+			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport"),
+			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport")+"/ws",
+			"/ip4/0.0.0.0/udp/"+viper.GetString("udpport")+"/quic",
 		),
 		libp2p.Security(libp2ptls.ID, libp2ptls.New),
 		libp2p.Security(noise.ID, noise.New),
@@ -123,10 +123,10 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 func ConnectedPeers() []*peer.AddrInfo {
 	var pinfos []*peer.AddrInfo = []*peer.AddrInfo{}
 	host, _ := GetP2PNode(nil)
-	for _, c := range host.Network().Conns() {
+	for _, p := range host.Peerstore().Peers() {
 		pinfos = append(pinfos, &peer.AddrInfo{
-			ID:    c.RemotePeer(),
-			Addrs: []multiaddr.Multiaddr{c.RemoteMultiaddr()},
+			ID:    p,
+			Addrs: host.Peerstore().Addrs(p),
 		})
 	}
 	return pinfos

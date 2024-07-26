@@ -11,7 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("gin-server")
 
 func StartServer() {
 
@@ -22,6 +26,7 @@ func StartServer() {
 
 	// gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.Use(otelgin.Middleware(serviceName))
 	r.Use(corsHeader())
 	r.Use(gin.Recovery())
 	go protocol.StartTicker()
