@@ -5,9 +5,10 @@ Description=Open Compute Framework Daemon
 User=ubuntu
 WorkingDirectory=/home/ubuntu
 ExecStart=/home/ubuntu/ocf start --mode standalone
-# optional items below
 Restart=always
 RestartSec=3
+Environment="AXIOM_TOKEN="
+Environment="AXIOM_DATASET="
 
 [Install]
 WantedBy=multi-user.target
