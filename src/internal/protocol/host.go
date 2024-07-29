@@ -28,6 +28,7 @@ import (
 var P2PNode *host.Host
 var ddht *dualdht.DHT
 var hostOnce sync.Once
+var MyID string
 
 func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 	hostOnce.Do(func() {
@@ -40,6 +41,7 @@ func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 			panic(err)
 		}
 		host, err := newHost(ctx, seedInt, ds)
+		MyID = host.ID().String()
 		P2PNode = &host
 		if err != nil {
 			panic(err)

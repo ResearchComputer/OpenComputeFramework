@@ -3,59 +3,49 @@ package server
 import (
 	"context"
 	"log"
+	"ocf/internal/common"
 	"os"
+	"sync"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"google.golang.org/grpc/credentials"
-
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"github.com/axiomhq/axiom-go/axiom"
+	axiotel "github.com/axiomhq/axiom-go/axiom/otel"
 )
 
 var (
-	serviceName  = os.Getenv("SERVICE_NAME")
-	collectorURL = os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-	insecure     = os.Getenv("INSECURE_MODE")
+	dataset    = os.Getenv("AXIOM_DATASET")
+	tracerOnce sync.Once
+	tracker    *axiom.Client
 )
 
-func initTracer() func(context.Context) error {
+func initTracer() {
+	tracerOnce.Do(func() {
+		ctx := context.Background()
+		stop, err := axiotel.InitTracing(ctx, dataset, "research-computer-coordinator", "v1.0.0")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer func() {
+			if stopErr := stop(); stopErr != nil {
+				log.Fatal(stopErr)
+			}
+		}()
+		tracker, err = axiom.NewClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+	})
+}
 
-	secureOption := otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	if len(insecure) > 0 {
-		secureOption = otlptracegrpc.WithInsecure()
-	}
+func IngestEvents(events []axiom.Event) {
 
-	exporter, err := otlptrace.New(
-		context.Background(),
-		otlptracegrpc.NewClient(
-			secureOption,
-			otlptracegrpc.WithEndpoint(collectorURL),
-		),
-	)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	resources, err := resource.New(
-		context.Background(),
-		resource.WithAttributes(
-			attribute.String("service.name", serviceName),
-			attribute.String("library.language", "go"),
-		),
-	)
-	if err != nil {
-		log.Printf("Could not set resources: ", err)
-	}
-
-	otel.SetTracerProvider(
-		sdktrace.NewTracerProvider(
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithBatcher(exporter),
-			sdktrace.WithResource(resources),
-		),
-	)
-	return exporter.Shutdown
+	go func() {
+		// expand events to axiom.Event
+		res, err := tracker.IngestEvents(context.Background(), dataset, events)
+		if err != nil {
+			common.Logger.Error(err)
+		}
+		for _, fail := range res.Failures {
+			common.Logger.Error(fail)
+		}
+	}()
 }

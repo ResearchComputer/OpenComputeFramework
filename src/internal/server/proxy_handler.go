@@ -11,7 +11,10 @@ import (
 	"ocf/internal/common"
 	"ocf/internal/protocol"
 	"strings"
+	"time"
 
+	"github.com/axiomhq/axiom-go/axiom"
+	"github.com/axiomhq/axiom-go/axiom/ingest"
 	"github.com/buger/jsonparser"
 	"github.com/gin-gonic/gin"
 	p2phttp "github.com/libp2p/go-libp2p-http"
@@ -30,6 +33,9 @@ func P2PForwardHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	event := []axiom.Event{{ingest.TimestampField: time.Now(), "event": "P2P Forward", "from": &protocol.MyID, "to": requestPeer, "path": requestPath}}
+	IngestEvents(event)
+
 	tr := &http.Transport{}
 	node, _ := protocol.GetP2PNode(nil)
 	tr.RegisterProtocol("libp2p", p2phttp.NewTransport(node))

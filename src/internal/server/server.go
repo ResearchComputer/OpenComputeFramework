@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 )
 
@@ -23,10 +22,9 @@ func StartServer() {
 	defer cancelCtx()
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	defer stop()
-
+	initTracer()
 	// gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	r.Use(otelgin.Middleware(serviceName))
 	r.Use(corsHeader())
 	r.Use(gin.Recovery())
 	go protocol.StartTicker()

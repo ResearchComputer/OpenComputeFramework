@@ -2,10 +2,11 @@ package server
 
 import (
 	"ocf/internal/protocol"
+	"time"
 
+	"github.com/axiomhq/axiom-go/axiom"
+	"github.com/axiomhq/axiom-go/axiom/ingest"
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel/attribute"
-	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 func listPeers(c *gin.Context) {
@@ -26,7 +27,9 @@ func deleteLocal(c *gin.Context) {
 }
 
 func getDNT(c *gin.Context) {
-	_, span := tracer.Start(c.Request.Context(), "getDNT", oteltrace.WithAttributes(attribute.String("id", "test")))
-	defer span.End()
+	events := []axiom.Event{
+		{ingest.TimestampField: time.Now(), "event": "DNT Lookup"},
+	}
+	IngestEvents(events)
 	c.JSON(200, protocol.GetNodeTable())
 }
