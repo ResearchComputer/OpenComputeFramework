@@ -37,7 +37,6 @@ func initTracer() {
 }
 
 func IngestEvents(events []axiom.Event) {
-
 	go func() {
 		// expand events to axiom.Event
 		res, err := tracker.IngestEvents(context.Background(), dataset, events)

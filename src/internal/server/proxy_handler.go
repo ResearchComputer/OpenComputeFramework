@@ -142,6 +142,10 @@ func GlobalServiceForwardHandler(c *gin.Context) {
 	targetPeer := candidates[randomIndex]
 	// replace the request path with the _service path
 	requestPath = "/v1/_service/" + serviceName + requestPath
+
+	event := []axiom.Event{{ingest.TimestampField: time.Now(), "event": "Service Forward", "from": protocol.MyID, "to": targetPeer, "path": requestPath, "service": serviceName}}
+	IngestEvents(event)
+
 	common.Logger.Info("Forwarding request to: ", targetPeer)
 	common.Logger.Info("Forwarding path to: ", requestPath)
 	target := url.URL{
