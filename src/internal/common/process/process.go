@@ -63,6 +63,8 @@ func (p *Process) Start() *Process {
 		}()
 	}
 	p.started = true
+	p.proc.Stdout = os.Stdout
+	p.proc.Stderr = os.Stderr
 	//Call the other functions to stream stdin and stdout
 	err := p.proc.Start()
 	if err != nil {

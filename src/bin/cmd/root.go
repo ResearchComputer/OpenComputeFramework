@@ -38,6 +38,8 @@ func init() {
 	startCmd.Flags().String("mode", "node", "Mode (standalone, local, full)")
 	startCmd.Flags().String("tcpport", "43905", "TCP Port")
 	startCmd.Flags().String("udpport", "59820", "UDP Port")
+	startCmd.Flags().String("subprocess", "", "Subprocess to start")
+
 	rootcmd.AddCommand(initCmd)
 	rootcmd.AddCommand(startCmd)
 	rootcmd.AddCommand(versionCmd)

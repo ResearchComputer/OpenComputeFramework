@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"ocf/internal/common"
+	"ocf/internal/common/process"
 	"ocf/internal/protocol"
 	"os/signal"
 	"syscall"
@@ -17,7 +18,6 @@ import (
 var tracer = otel.Tracer("gin-server")
 
 func StartServer() {
-
 	_, cancelCtx := protocol.GetCRDTStore()
 	defer cancelCtx()
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
@@ -28,6 +28,10 @@ func StartServer() {
 	r.Use(corsHeader())
 	r.Use(gin.Recovery())
 	go protocol.StartTicker()
+	subProcess := viper.GetString("subprocess")
+	if subProcess != "" {
+		go process.StartSubProcess(subProcess)
+	}
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/health", healthStatusCheck)
