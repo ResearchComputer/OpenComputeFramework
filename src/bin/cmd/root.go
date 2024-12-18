@@ -43,6 +43,7 @@ func init() {
 	rootcmd.AddCommand(initCmd)
 	rootcmd.AddCommand(startCmd)
 	rootcmd.AddCommand(versionCmd)
+	rootcmd.AddCommand(updateCmd)
 }
 
 func initConfig(cmd *cobra.Command) error {

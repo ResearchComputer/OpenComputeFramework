@@ -17,6 +17,7 @@ import (
 	record "github.com/libp2p/go-libp2p-record"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/routing"
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
@@ -117,7 +118,6 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 	if ds != nil {
 		dhtOpts = append(dhtOpts, dualdht.DHTOption(dht.Datastore(ds)))
 	}
-
 	return dualdht.New(ctx, h, dhtOpts...)
 }
 
@@ -126,10 +126,13 @@ func ConnectedPeers() []*peer.AddrInfo {
 	var pinfos []*peer.AddrInfo = []*peer.AddrInfo{}
 	host, _ := GetP2PNode(nil)
 	for _, p := range host.Peerstore().Peers() {
-		pinfos = append(pinfos, &peer.AddrInfo{
-			ID:    p,
-			Addrs: host.Peerstore().Addrs(p),
-		})
+		// check if the peer is connected
+		if host.Network().Connectedness(p) == network.Connected {
+			pinfos = append(pinfos, &peer.AddrInfo{
+				ID:    p,
+				Addrs: host.Peerstore().Addrs(p),
+			})
+		}
 	}
 	return pinfos
 }

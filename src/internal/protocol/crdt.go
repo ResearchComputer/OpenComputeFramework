@@ -94,7 +94,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		common.ReportError(err, "Error while starting ticker")
 		// h.ConnManager().TagPeer(inf.ID, "keep", 100)
 		common.Logger.Info("Mode: ", mode)
-		common.Logger.Info("Peer ID: ", host.ID().Pretty())
+		common.Logger.Info("Peer ID: ", host.ID().String())
 		common.Logger.Info("Listen Addr: ", host.Addrs())
 	})
 	return crdtStore, cancelSubscriptions

@@ -39,6 +39,7 @@ func StartServer() {
 		{
 			crdtGroup.GET("/table", getDNT)
 			crdtGroup.GET("/peers", listPeers)
+			crdtGroup.GET("/bootstraps", listBootstraps)
 			crdtGroup.POST("/_node", updateLocal)
 			crdtGroup.DELETE("/_node", deleteLocal)
 		}

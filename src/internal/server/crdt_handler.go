@@ -14,6 +14,11 @@ func listPeers(c *gin.Context) {
 	c.JSON(200, gin.H{"peers": addrs})
 }
 
+func listBootstraps(c *gin.Context) {
+	addrs := protocol.ConnectedPeers()
+	c.JSON(200, gin.H{"bootstraps": addrs})
+}
+
 func updateLocal(c *gin.Context) {
 	var peer protocol.Peer
 	c.BindJSON(&peer)
