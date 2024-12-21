@@ -32,13 +32,17 @@ var rootcmd = &cobra.Command{
 //nolint:gochecknoinits
 func init() {
 	rootcmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ocf/cfg.yaml)")
+
 	startCmd.Flags().String("wallet.account", "", "wallet account")
-	startCmd.Flags().StringSlice("bootstrap.addr", []string{"/ip4/140.238.223.13/tcp/43905/p2p/QmWxgDBrscNmiURmba196goATfG6fHrMniNDMei13YTCay"}, "bootstrap address")
+	startCmd.Flags().String("bootstrap.addr", "http://152.67.71.5:8092/v1/dnt/bootstraps", "bootstrap address")
 	startCmd.Flags().String("seed", "0", "Seed")
 	startCmd.Flags().String("mode", "node", "Mode (standalone, local, full)")
 	startCmd.Flags().String("tcpport", "43905", "TCP Port")
 	startCmd.Flags().String("udpport", "59820", "UDP Port")
 	startCmd.Flags().String("subprocess", "", "Subprocess to start")
+	startCmd.Flags().String("public-addr", "", "Public address if you have one (by setting this, you can be a bootstrap node)")
+	startCmd.Flags().String("service.name", "", "Service name")
+	startCmd.Flags().String("service.port", "", "Service port")
 
 	rootcmd.AddCommand(initCmd)
 	rootcmd.AddCommand(startCmd)

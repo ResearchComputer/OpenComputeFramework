@@ -86,8 +86,6 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 
 		crdtStore, err = crdt.New(store, ds.NewKey(pubsubKey), ipfs, pubsubBC, opts)
 		common.ReportError(err, "Error while creating crdt store")
-
-		common.Logger.Info("Bootstrapping...")
 		addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil, mode)...)
 		common.ReportError(err, "Error while getting bootstrap peers")
 		ipfs.Bootstrap(addsInfo)
@@ -105,4 +103,12 @@ func Reconnect() {
 	addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil, mode)...)
 	common.ReportError(err, "Error while getting bootstrap peers")
 	ipfs.Bootstrap(addsInfo)
+}
+
+func ClearCRDTStore() {
+	// remove ~/.ocfcore directory
+	err := common.RemoveDir(common.GetDBPath())
+	if err != nil {
+		common.Logger.Error("Error while removing directory: ", err)
+	}
 }

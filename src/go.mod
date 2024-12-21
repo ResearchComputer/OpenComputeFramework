@@ -3,8 +3,10 @@ module ocf
 go 1.23
 
 require (
+	github.com/NVIDIA/go-nvml v0.12.4-0
 	github.com/axiomhq/axiom-go v0.21.1
 	github.com/buger/jsonparser v1.1.1
+	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/hsanjuan/ipfs-lite v1.8.2
 	github.com/ipfs/boxo v0.24.3
@@ -23,7 +25,6 @@ require (
 	github.com/multiformats/go-multiaddr v0.14.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	go.opentelemetry.io/otel v1.33.0
 	go.uber.org/zap v1.27.0
 )
 
@@ -193,6 +194,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.58.0 // indirect
+	go.opentelemetry.io/otel v1.33.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect

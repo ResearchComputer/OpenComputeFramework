@@ -136,3 +136,19 @@ func ConnectedPeers() []*peer.AddrInfo {
 	}
 	return pinfos
 }
+
+func ConnectedBootstraps() []string {
+	var bootstraps = []string{}
+	dnt := GetNodeTable(false)
+	host, _ := GetP2PNode(nil)
+	for _, p := range *dnt {
+		if p.PublicAddress != "" {
+			common.Logger.Info("Peer: ", p.ID, " Public Address: ", p.PublicAddress, " Connectedness: ", host.Network().Connectedness(peer.ID(p.ID)), " Host ID: ", host.ID())
+			if host.Network().Connectedness(peer.ID(p.ID)) == network.Connected || host.ID().String() == p.ID {
+				bootstrapAddr := "/ip4/" + p.PublicAddress + "/tcp/" + viper.GetString("tcpport") + "/p2p/" + p.ID
+				bootstraps = append(bootstraps, bootstrapAddr)
+			}
+		}
+	}
+	return bootstraps
+}

@@ -3,6 +3,8 @@ package protocol
 import (
 	"math/rand"
 	"ocf/internal/common"
+	"ocf/internal/common/process"
+	"os"
 
 	ds "github.com/ipfs/go-datastore"
 	"github.com/jasonlvhit/gocron"
@@ -26,12 +28,18 @@ func StartTicker() {
 	err = gocron.Every(30).Second().Do(func() {
 		host, _ := GetP2PNode(nil)
 		peers := host.Peerstore().Peers()
+		// updateMyself()
 		for _, peer := range peers {
 			// check if peer is still connected
-			if host.Network().Connectedness(peer) != network.Connected {
+			if peer != host.ID() && host.Network().Connectedness(peer) != network.Connected {
 				// delete peer from table
 				DeleteNodeTableHook(ds.NewKey(peer.String()))
 			}
+		}
+		if !process.HealthCheck() {
+			common.Logger.Error("Health check failed")
+			// exit myself
+			os.Exit(1)
 		}
 	})
 	common.ReportError(err, "Error while creating cleaning ticker")

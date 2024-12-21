@@ -215,7 +215,7 @@ help:
 
 .PHONY: upload
 upload:
-	@rclone copy ${BUILD_DIR}/release/* pcloud:/Public\ Folder/releases/
+	@rclone copy ${BUILD_DIR}/release/* pcloud:/Public\ Folder/releases/ -P -L
 
 # Variable outputting/exporting rules
 var-%: ; @echo $($*)

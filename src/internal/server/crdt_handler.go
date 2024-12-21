@@ -15,7 +15,7 @@ func listPeers(c *gin.Context) {
 }
 
 func listBootstraps(c *gin.Context) {
-	addrs := protocol.ConnectedPeers()
+	addrs := protocol.ConnectedBootstraps()
 	c.JSON(200, gin.H{"bootstraps": addrs})
 }
 
@@ -36,5 +36,5 @@ func getDNT(c *gin.Context) {
 		{ingest.TimestampField: time.Now(), "event": "DNT Lookup"},
 	}
 	IngestEvents(events)
-	c.JSON(200, protocol.GetNodeTable())
+	c.JSON(200, protocol.GetNodeTable(true))
 }

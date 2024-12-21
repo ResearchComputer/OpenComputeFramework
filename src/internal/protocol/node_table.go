@@ -5,38 +5,29 @@ import (
 	"encoding/json"
 	"errors"
 	"ocf/internal/common"
+	"ocf/internal/platform"
 	"sync"
 
 	ds "github.com/ipfs/go-datastore"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/spf13/viper"
 )
 
 var dntOnce sync.Once
+var myself Peer
 
 const (
 	CONNECTED    string = "connected"
 	DISCONNECTED string = "disconnected"
 )
 
-type GPUSpec struct {
-	Name            string `json:"name"`
-	Memory          int64  `json:"memory"`
-	MemoryBandwidth int64  `json:"memory_bandwidth"`
-	UsedMemory      int64  `json:"memory_used"`
-}
-
-type HardwareSpec struct {
-	GPUs            []GPUSpec `json:"gpus"`
-	Memory          int64     `json:"host_memory"`
-	MemoryBandwidth int64     `json:"host_memory_bandwidth"`
-	UsedMemory      int64     `json:"host_memory_used"`
-}
-
 type Service struct {
-	Name     string         `json:"name"`
-	Hardware []HardwareSpec `json:"hardware"`
-	Status   string         `json:"status"`
-	Host     string         `json:"host"`
-	Port     string         `json:"port"`
+	Name     string              `json:"name"`
+	Hardware common.HardwareSpec `json:"hardware"`
+	Status   string              `json:"status"`
+	Host     string              `json:"host"`
+	Port     string              `json:"port"`
 	// IdentityGroup is a list of identities that can access this service
 	// Format: <identity_group_name>=<identity_name>
 	// e.g., "model=resnet50"
@@ -45,17 +36,19 @@ type Service struct {
 
 // Peer is a single node in the network, as can be seen by the current node.
 type Peer struct {
-	ID                string    `json:"id"`
-	Latency           int       `json:"latency"` // in ms
-	Privileged        bool      `json:"privileged"`
-	Owner             string    `json:"owner"`
-	CurrentOffering   []string  `json:"current_offering"`
-	Role              []string  `json:"role"`
-	Status            string    `json:"status"`
-	AvailableOffering []string  `json:"available_offering"`
-	Service           []Service `json:"service"`
-	LastSeen          int64     `json:"last_seen"`
-	Version           string    `json:"version"`
+	ID                string              `json:"id"`
+	Latency           int                 `json:"latency"` // in ms
+	Privileged        bool                `json:"privileged"`
+	Owner             string              `json:"owner"`
+	CurrentOffering   []string            `json:"current_offering"`
+	Role              []string            `json:"role"`
+	Status            string              `json:"status"`
+	AvailableOffering []string            `json:"available_offering"`
+	Service           []Service           `json:"service"`
+	LastSeen          int64               `json:"last_seen"`
+	Version           string              `json:"version"`
+	PublicAddress     string              `json:"public_address"`
+	Hardware          common.HardwareSpec `json:"hardware"`
 }
 
 // Node table tracks the nodes and their status in the network.
@@ -63,10 +56,27 @@ type NodeTable map[string]Peer
 
 var dnt *NodeTable
 
-func GetNodeTable() *NodeTable {
+func GetNodeTable(reachableOnly bool) *NodeTable {
 	dntOnce.Do(func() {
 		dnt = &NodeTable{}
 	})
+	if reachableOnly {
+		host, _ := GetP2PNode(nil)
+		// filter out the nodes that are not connected
+		for _, p := range *dnt {
+			if host.Network().Connectedness(peer.ID(p.ID)) != network.Connected && p.ID != host.ID().String() {
+				// try to dial the peer
+				conn, err := host.Network().DialPeer(context.Background(), peer.ID(p.ID))
+				if err != nil {
+					common.Logger.Info("Peer: ", p.ID, " removed from table: ", err)
+					// delete(*dnt, key)
+				} else {
+					defer conn.Close()
+				}
+
+			}
+		}
+	}
 	return dnt
 }
 
@@ -74,7 +84,7 @@ func UpdateNodeTable(peer Peer) {
 	ctx := context.Background()
 	host, _ := GetP2PNode(nil)
 	// broadcast the peer to the network
-	store, pcancel := GetCRDTStore()
+	store, _ := GetCRDTStore()
 	key := ds.NewKey(host.ID().String())
 	peer.ID = host.ID().String()
 	// merge services instead of overwriting
@@ -83,24 +93,43 @@ func UpdateNodeTable(peer Peer) {
 	if err == nil {
 		peer.Service = append(peer.Service, existingPeer.Service...)
 	}
+	if viper.GetString("public-addr") != "" {
+		peer.PublicAddress = viper.GetString("public-addr")
+	}
 	value, err := json.Marshal(peer)
 	common.ReportError(err, "Error while marshalling peer")
 	store.Put(ctx, key, value)
-	defer pcancel()
+}
+
+func MarkSelfAsBootstrap() {
+	if viper.GetString("public-addr") != "" {
+		common.Logger.Info("Registering myself as a bootstrap node")
+		ctx := context.Background()
+		store, _ := GetCRDTStore()
+		host, _ := GetP2PNode(nil)
+		key := ds.NewKey(host.ID().String())
+		peer := Peer{
+			ID:            host.ID().String(),
+			PublicAddress: viper.GetString("public-addr"),
+		}
+		value, err := json.Marshal(peer)
+		common.ReportError(err, "Error while marshalling peer")
+		store.Put(ctx, key, value)
+	}
 }
 
 func DeleteNodeTable() {
 	ctx := context.Background()
 	host, _ := GetP2PNode(nil)
 	// broadcast the peer to the network
-	store, pcancel := GetCRDTStore()
+	store, _ := GetCRDTStore()
 	key := ds.NewKey(host.ID().String())
+	common.Logger.Info("Removing myself from the network")
 	store.Delete(ctx, key)
-	defer pcancel()
 }
 
 func UpdateNodeTableHook(key ds.Key, value []byte) {
-	table := *GetNodeTable()
+	table := *GetNodeTable(false)
 	var peer Peer
 	err := json.Unmarshal(value, &peer)
 	common.ReportError(err, "Error while unmarshalling peer")
@@ -108,12 +137,12 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 }
 
 func DeleteNodeTableHook(key ds.Key) {
-	table := *GetNodeTable()
+	table := *GetNodeTable(false)
 	delete(table, key.String())
 }
 
 func GetPeerFromTable(peerId string) (Peer, error) {
-	table := *GetNodeTable()
+	table := *GetNodeTable(false)
 	peer, ok := table[peerId]
 	if !ok {
 		return Peer{}, errors.New("peer not found")
@@ -123,8 +152,7 @@ func GetPeerFromTable(peerId string) (Peer, error) {
 
 func GetService(name string) (Service, error) {
 	host, _ := GetP2PNode(nil)
-	store, pcancel := GetCRDTStore()
-	defer pcancel()
+	store, _ := GetCRDTStore()
 	key := ds.NewKey(host.ID().String())
 	value, err := store.Get(context.Background(), key)
 	common.ReportError(err, "Error while getting peer")
@@ -141,7 +169,7 @@ func GetService(name string) (Service, error) {
 
 func GetAllProviders(serviceName string) ([]Peer, error) {
 	var providers []Peer
-	table := *GetNodeTable()
+	table := *GetNodeTable(false)
 	for _, peer := range table {
 		for _, service := range peer.Service {
 			if service.Name == serviceName {
@@ -153,4 +181,19 @@ func GetAllProviders(serviceName string) ([]Peer, error) {
 		return providers, errors.New("no providers found")
 	}
 	return providers, nil
+}
+
+func InitializeMyself() {
+	host, _ := GetP2PNode(nil)
+	ctx := context.Background()
+	store, _ := GetCRDTStore()
+	key := ds.NewKey(host.ID().String())
+	myself = Peer{
+		ID:            host.ID().String(),
+		PublicAddress: viper.GetString("public-addr"),
+	}
+	myself.Hardware.GPUs = platform.GetGPUInfo()
+	value, err := json.Marshal(myself)
+	common.ReportError(err, "Error while marshalling peer")
+	store.Put(ctx, key, value)
 }

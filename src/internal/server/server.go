@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"embed"
 	"net/http"
 	"ocf/internal/common"
 	"ocf/internal/common/process"
@@ -10,27 +11,32 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel"
 )
 
-var tracer = otel.Tracer("gin-server")
+//go:embed ui
+var ui embed.FS
 
 func StartServer() {
+	protocol.InitializeMyself()
 	_, cancelCtx := protocol.GetCRDTStore()
 	defer cancelCtx()
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	defer stop()
+
 	initTracer()
 	// gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Use(corsHeader())
+	r.Use(static.Serve("/", static.EmbedFolder(ui, "ui")))
 	r.Use(gin.Recovery())
+
 	go protocol.StartTicker()
 	subProcess := viper.GetString("subprocess")
 	if subProcess != "" {
-		go process.StartSubProcess(subProcess)
+		go process.StartCriticalProcess(subProcess)
 	}
 	v1 := r.Group("/v1")
 	{
@@ -78,10 +84,16 @@ func StartServer() {
 			common.ReportError(err, "Server failed to start")
 		}
 	}()
+	go func() {
+		protocol.RegisterLocalServices()
+	}()
 	<-ctx.Done()
 	// shutting down...
 	protocol.DeleteNodeTable()
+	// protocol.ClearCRDTStore()
+	time.Sleep(5 * time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	common.Logger.Info("Shutting down server gracefully")
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		common.ReportError(err, "Server shutdown failed")

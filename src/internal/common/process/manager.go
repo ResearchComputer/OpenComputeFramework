@@ -1,9 +1,7 @@
 package process
 
 import (
-	"bufio"
-	"fmt"
-	"os"
+	"strings"
 )
 
 type ProcessManager struct {
@@ -19,18 +17,8 @@ func NewProcessManager() *ProcessManager {
 	return pm
 }
 
-func readStuff(scanner *bufio.Scanner) {
-	for scanner.Scan() {
-		fmt.Println("Performed Scan")
-		fmt.Println(scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
-	}
-}
-
-func (pm *ProcessManager) StartProcess(command string, envs string, args []string) {
-	process := NewProcess(command, envs, args...)
+func (pm *ProcessManager) StartProcess(command string, envs string, critical bool, args []string) {
+	process := NewProcess(command, envs, critical, args...)
 	process = process.Start()
 	// stream the output
 	pm.processes = append(pm.processes, process)
@@ -42,7 +30,25 @@ func (pm *ProcessManager) StopAllProcesses() {
 	}
 }
 
-func StartSubProcess(cmd string) {
+func StartCriticalProcess(cmd string) {
 	pm := NewProcessManager()
-	pm.StartProcess(cmd, "", nil)
+	cmdParts := strings.Fields(cmd)
+	if len(cmdParts) == 0 {
+		return
+	}
+	command := cmdParts[0]
+	args := cmdParts[1:]
+	pm.StartProcess(command, "", true, args)
+}
+
+func HealthCheck() bool {
+	pm := NewProcessManager()
+	for _, process := range pm.processes {
+		// check if the process is running
+		if !process.isRunning() && process.critical {
+			process.completed = true
+			return false
+		}
+	}
+	return true
 }

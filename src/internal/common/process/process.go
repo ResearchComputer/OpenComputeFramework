@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"io"
 	"log"
+	"ocf/internal/common"
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -23,13 +25,16 @@ type Process struct {
 	inputStreamSet     bool
 	outputStreamSet    bool
 	completed          bool
+	critical           bool
 	timeout            time.Duration
+	pid                int
 	// Access to completed MUST capture the lock.
 	mutex sync.RWMutex
 }
 
 // NewProcess creates a new process for the specific command
-func NewProcess(command string, envs string, args ...string) *Process {
+func NewProcess(command string, envs string, critical bool, args ...string) *Process {
+
 	cmd := exec.Command(command, args...)
 	// load system environments
 	cmd.Env = os.Environ()
@@ -47,6 +52,8 @@ func NewProcess(command string, envs string, args ...string) *Process {
 		false,
 		false,
 		false,
+		critical,
+		0,
 		0,
 		sync.RWMutex{}}
 	return process
@@ -67,6 +74,8 @@ func (p *Process) Start() *Process {
 	p.proc.Stderr = os.Stderr
 	//Call the other functions to stream stdin and stdout
 	err := p.proc.Start()
+	p.pid = p.proc.Process.Pid
+	common.Logger.Debug("Process started with pid: ", p.pid)
 	if err != nil {
 		panic(err)
 	}
@@ -114,7 +123,6 @@ func (p *Process) OpenInputStream() (io.WriteCloser, error) {
 	stdIn, err := p.proc.StdinPipe()
 	p.inputStreamSet = true
 	return stdIn, err
-
 }
 
 // StreamOutput streams the output
@@ -162,4 +170,20 @@ func (p *Process) cleanup() {
 	}
 	close(p.done)
 	close(p.cancellationSignal)
+}
+
+func (p *Process) isRunning() bool {
+	if p.completed || !p.started {
+		return false
+	}
+	proc, err := os.FindProcess(p.pid)
+	if err != nil {
+		return false
+	} else {
+		err = proc.Signal((syscall.Signal(0)))
+		if err != nil {
+			return false
+		}
+	}
+	return true
 }
