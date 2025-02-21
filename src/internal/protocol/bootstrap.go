@@ -19,10 +19,25 @@ func getDefaultBootstrapPeers(bootstrapAddrs []string, mode string) []multiaddr.
 		// read bootstrap_addr from config
 		var bootstraps common.Bootstraps
 		// send get request to this address
-		resp, _ := common.RemoteGET(viper.GetString("bootstrap.addr"))
-		json.Unmarshal(resp, &bootstraps)
-		// if we got bootstrap addresses from remote, log it
-		bootstrapAddrs = bootstraps.Bootstraps
+		bootstrapAddr := viper.GetString("bootstrap.addr")
+		// if startswith http, send GET request
+		if strings.HasPrefix(bootstrapAddr, "http") {
+			common.Logger.Info("Sending GET request to: ", viper.GetString("bootstrap.addr"))
+			resp, _ := common.RemoteGET(viper.GetString("bootstrap.addr"))
+			err := json.Unmarshal(resp, &bootstraps)
+			if err != nil {
+				// convert resp to string
+				common.Logger.Error("Failed to unmarshal bootstrap addresses: ", err)
+				common.Logger.Info("Got response: ", string(resp))
+			}
+			// if we got bootstrap addresses from remote, log it
+			bootstrapAddrs = bootstraps.Bootstraps
+			common.Logger.Info("Got bootstrap addrs: ", bootstrapAddrs)
+		} else if strings.HasPrefix(bootstrapAddr, "/ip4/") {
+			bootstrapAddrs = []string{bootstrapAddr}
+		} else {
+			common.Logger.Error("Invalid bootstrap address: ", bootstrapAddr)
+		}
 	}
 	for _, s := range bootstrapAddrs {
 		s = strings.TrimPrefix(s, "[")
@@ -33,5 +48,6 @@ func getDefaultBootstrapPeers(bootstrapAddrs []string, mode string) []multiaddr.
 		}
 		DefaultBootstrapPeers = append(DefaultBootstrapPeers, ma)
 	}
+	common.Logger.Info("Bootstrap: ", DefaultBootstrapPeers)
 	return DefaultBootstrapPeers
 }
