@@ -12,10 +12,10 @@ func init() {
 	config := zap.NewDevelopmentConfig()
 	if viper.Get("loglevel") != nil {
 		// if it is not set, by default will be 0 - info
-		config.Level.SetLevel(zapcore.Level(viper.GetInt("log_level")))
+		config.Level.SetLevel(zapcore.Level(viper.GetInt("loglevel")))
 	}
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-
+	config.Level.SetLevel(zapcore.InfoLevel)
 	zapLogger, err := config.Build()
 	// trunk-ignore(golangci-lint/errcheck)
 	defer zapLogger.Sync()

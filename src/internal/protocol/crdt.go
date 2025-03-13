@@ -7,10 +7,11 @@ import (
 	"sync"
 	"time"
 
+	crdt "ocf/internal/protocol/go-ds-crdt"
+
 	ipfslite "github.com/hsanjuan/ipfs-lite"
 	ds "github.com/ipfs/go-datastore"
 	badger "github.com/ipfs/go-ds-badger"
-	crdt "github.com/ipfs/go-ds-crdt"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/viper"

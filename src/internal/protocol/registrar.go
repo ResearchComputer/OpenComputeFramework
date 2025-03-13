@@ -17,7 +17,7 @@ func RegisterLocalServices() {
 	servicePort := viper.GetString("service.port")
 	if serviceName == "llm" && servicePort != "" {
 		// register the service by first fetch available models on the port
-		err := healthCheckRemote(servicePort, 100)
+		err := healthCheckRemote(servicePort, 6000)
 		if err != nil {
 			common.Logger.Error("could not health check LLM service: ", err)
 			return
