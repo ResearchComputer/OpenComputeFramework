@@ -32,7 +32,8 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		mode := viper.GetString("mode")
 		host, dht := GetP2PNode(nil)
 		ctx := context.Background()
-		store, err := badger.NewDatastore(common.GetDBPath(), &badger.DefaultOptions)
+		common.Logger.Info("Creating CRDT store, using dbpath: " + common.GetDBPath(host.ID().String()))
+		store, err := badger.NewDatastore(common.GetDBPath(host.ID().String()), &badger.DefaultOptions)
 		common.ReportError(err, "Error while creating datastore")
 
 		ipfs, err = ipfslite.New(ctx, store, nil, host, &dht, nil)
@@ -108,7 +109,8 @@ func Reconnect() {
 
 func ClearCRDTStore() {
 	// remove ~/.ocfcore directory
-	err := common.RemoveDir(common.GetDBPath())
+	host, _ := GetP2PNode(nil)
+	err := common.RemoveDir(common.GetDBPath(host.ID().String()))
 	if err != nil {
 		common.Logger.Error("Error while removing directory: ", err)
 	}

@@ -51,6 +51,11 @@ type Peer struct {
 	Hardware          common.HardwareSpec `json:"hardware"`
 }
 
+type PeerWithStatus struct {
+	ID            string `json:"id"`
+	Connectedness string `json:"connectedness"` // "connected" or "disconnected"
+}
+
 // Node table tracks the nodes and their status in the network.
 type NodeTable map[string]Peer
 
@@ -73,7 +78,6 @@ func GetNodeTable(reachableOnly bool) *NodeTable {
 				} else {
 					defer conn.Close()
 				}
-
 			}
 		}
 	}

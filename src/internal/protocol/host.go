@@ -53,8 +53,8 @@ func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 
 func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host, error) {
 	connmgr, err := connmgr.NewConnManager(
-		100,   // Lowwater
-		10000, // HighWater,
+		50,  // Lowwater - increased from 10 to 50
+		500, // HighWater - increased from 150 to 500
 		connmgr.WithGracePeriod(time.Minute),
 	)
 	if err != nil {
@@ -112,7 +112,7 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 	dhtOpts := []dualdht.Option{
 		dualdht.DHTOption(dht.NamespacedValidator("pk", record.PublicKeyValidator{})),
 		dualdht.DHTOption(dht.NamespacedValidator("ipns", ipns.Validator{KeyBook: h.Peerstore()})),
-		dualdht.DHTOption(dht.Concurrency(10)),
+		dualdht.DHTOption(dht.Concurrency(500)),
 		dualdht.DHTOption(dht.Mode(dht.ModeAuto)),
 	}
 	if ds != nil {
@@ -133,6 +133,18 @@ func ConnectedPeers() []*peer.AddrInfo {
 				Addrs: host.Peerstore().Addrs(p),
 			})
 		}
+	}
+	return pinfos
+}
+
+func AllPeers() []*PeerWithStatus {
+	var pinfos []*PeerWithStatus = []*PeerWithStatus{}
+	host, _ := GetP2PNode(nil)
+	for _, p := range host.Peerstore().Peers() {
+		pinfos = append(pinfos, &PeerWithStatus{
+			ID:            p.String(),
+			Connectedness: host.Network().Connectedness(p).String(),
+		})
 	}
 	return pinfos
 }

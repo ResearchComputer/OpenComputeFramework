@@ -24,6 +24,6 @@ func GetHomePath() string {
 	return ocfcorePath
 }
 
-func GetDBPath() string {
-	return path.Join(GetHomePath(), "ocfcore.db")
+func GetDBPath(nodeid string) string {
+	return path.Join(GetHomePath(), "ocfcore."+nodeid+".db")
 }

@@ -45,6 +45,7 @@ func StartServer() {
 		{
 			crdtGroup.GET("/table", getDNT)
 			crdtGroup.GET("/peers", listPeers)
+			crdtGroup.GET("/peers_status", listPeersWithStatus)
 			crdtGroup.GET("/bootstraps", listBootstraps)
 			crdtGroup.POST("/_node", updateLocal)
 			crdtGroup.DELETE("/_node", deleteLocal)
@@ -90,7 +91,7 @@ func StartServer() {
 	<-ctx.Done()
 	// shutting down...
 	protocol.DeleteNodeTable()
-	// protocol.ClearCRDTStore()
+	protocol.ClearCRDTStore()
 	time.Sleep(5 * time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	common.Logger.Info("Shutting down server gracefully")

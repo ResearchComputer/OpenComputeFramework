@@ -43,7 +43,7 @@ func init() {
 	startCmd.Flags().String("public-addr", "", "Public address if you have one (by setting this, you can be a bootstrap node)")
 	startCmd.Flags().String("service.name", "", "Service name")
 	startCmd.Flags().String("service.port", "", "Service port")
-
+	startCmd.Flags().Bool("cleanslate", true, "Clean slate")
 	rootcmd.AddCommand(initCmd)
 	rootcmd.AddCommand(startCmd)
 	rootcmd.AddCommand(versionCmd)

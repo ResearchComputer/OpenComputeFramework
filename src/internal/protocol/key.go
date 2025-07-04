@@ -20,7 +20,7 @@ func writeKeyToFile(priv crypto.PrivKey) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	keyPath := path.Join(home, ".tom", "keys", "id")
+	keyPath := path.Join(home, ".ocfcore", "keys", "id")
 	err = os.MkdirAll(path.Dir(keyPath), os.ModePerm)
 	if err != nil {
 		common.Logger.Error("Could not create keys directory", "error", err)
@@ -39,7 +39,7 @@ func loadKeyFromFile() crypto.PrivKey {
 		fmt.Println(err)
 		return nil
 	}
-	keyPath := path.Join(home, ".tom", "keys", "id")
+	keyPath := path.Join(home, ".ocfcore", "keys", "id")
 	keyData, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil

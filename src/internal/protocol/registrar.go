@@ -91,5 +91,10 @@ func updateMyself() {
 	value, err := json.Marshal(myself)
 	key := ds.NewKey(myself.ID)
 	common.ReportError(err, "Error while marshalling peer")
-	store.Put(ctx, key, value)
+	err = store.Put(ctx, key, value)
+	if err != nil {
+		common.Logger.Warn("Error while updating myself in CRDT store: ", err)
+	} else {
+		common.Logger.Info("Updated myself in CRDT store: ", myself)
+	}
 }

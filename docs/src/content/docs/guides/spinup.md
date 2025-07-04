@@ -97,7 +97,9 @@ To connect the workers to the global dispatcher, you need to start the workers (
 ./build/ocf-amd64 start --bootstrap.addr=/ip4/<ip addr of global dispatcher>/tcp/43905/p2p/<Peer ID of global dispatcher>
 ```
 
-Once connected, you can view all connected workers by visiting the following URL in your browser: http://<ip addr of global dispatcher>:8092/v1/dnt/peers.
+Once connected, you can view:
+- **All nodes in the network** (including disconnected ones): http://<ip addr of global dispatcher>:8092/v1/dnt/table
+- **Only actively connected peers**: http://<ip addr of global dispatcher>:8092/v1/dnt/peers
 
 
 ## Next Steps
