@@ -9,7 +9,7 @@ import (
 
 func corsHeader() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("tom-version", common.JSONVersion.Commit)
+		c.Writer.Header().Set("ocf-version", common.JSONVersion.Commit)
 		// if not set
 		if c.Writer.Header().Get("Access-Control-Allow-Origin") != "*" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

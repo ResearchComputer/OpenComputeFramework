@@ -7,7 +7,6 @@ import (
 	"ocf/internal/common"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/ipfs/boxo/ipns"
 	"github.com/ipfs/go-datastore"
@@ -20,7 +19,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/routing"
-	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/spf13/viper"
@@ -52,14 +50,15 @@ func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 }
 
 func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host, error) {
-	connmgr, err := connmgr.NewConnManager(
-		50,  // Lowwater - increased from 10 to 50
-		500, // HighWater - increased from 150 to 500
-		connmgr.WithGracePeriod(time.Minute),
-	)
-	if err != nil {
-		common.Logger.Error("Error while creating connection manager: %v", err)
-	}
+	// connmgr, err := connmgr.NewConnManager(
+	// 	50,
+	// 	500,
+	// 	connmgr.WithGracePeriod(time.Minute),
+	// )
+	// if err != nil {
+	// 	common.Logger.Error("Error while creating connection manager: %v", err)
+	// }
+	var err error
 	var priv crypto.PrivKey
 	// try to load the private key from file
 	if seed == 0 {
@@ -87,7 +86,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 	opts := []libp2p.Option{
 		libp2p.DefaultTransports,
 		libp2p.Identity(priv),
-		libp2p.ConnectionManager(connmgr),
+		// libp2p.ConnectionManager(connmgr),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport"),
@@ -112,7 +111,7 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 	dhtOpts := []dualdht.Option{
 		dualdht.DHTOption(dht.NamespacedValidator("pk", record.PublicKeyValidator{})),
 		dualdht.DHTOption(dht.NamespacedValidator("ipns", ipns.Validator{KeyBook: h.Peerstore()})),
-		dualdht.DHTOption(dht.Concurrency(500)),
+		// dualdht.DHTOption(dht.Concurrency(500)),
 		dualdht.DHTOption(dht.Mode(dht.ModeAuto)),
 	}
 	if ds != nil {

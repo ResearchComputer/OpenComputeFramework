@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -26,6 +27,11 @@ func ErrorHandler(res http.ResponseWriter, req *http.Request, err error) {
 
 // P2P handler for forwarding requests to other peers
 func P2PForwardHandler(c *gin.Context) {
+	// Set a longer timeout for AI/ML services
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Minute)
+	defer cancel()
+	c.Request = c.Request.WithContext(ctx)
+
 	requestPeer := c.Param("peerId")
 	requestPath := c.Param("path")
 	body, err := io.ReadAll(c.Request.Body)
@@ -36,7 +42,11 @@ func P2PForwardHandler(c *gin.Context) {
 	event := []axiom.Event{{ingest.TimestampField: time.Now(), "event": "P2P Forward", "from": &protocol.MyID, "to": requestPeer, "path": requestPath}}
 	IngestEvents(event)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{
+		ResponseHeaderTimeout: 10 * time.Minute, // Allow up to 10 minutes for response headers
+		IdleConnTimeout:       90 * time.Second, // Keep connections alive for 90 seconds
+		DisableKeepAlives:     false,            // Enable keep-alives for better performance
+	}
 	node, _ := protocol.GetP2PNode(nil)
 	tr.RegisterProtocol("libp2p", p2phttp.NewTransport(node))
 	target := url.URL{
@@ -92,6 +102,11 @@ func ServiceForwardHandler(c *gin.Context) {
 
 // in case of global service, we need to forward the request to the service, identified by the service name and identity group
 func GlobalServiceForwardHandler(c *gin.Context) {
+	// Set a longer timeout for AI/ML services
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Minute)
+	defer cancel()
+	c.Request = c.Request.WithContext(ctx)
+
 	serviceName := c.Param("service")
 	requestPath := c.Param("path")
 	providers, err := protocol.GetAllProviders(serviceName)
@@ -136,7 +151,11 @@ func GlobalServiceForwardHandler(c *gin.Context) {
 	// randomly select one of the candidates
 	// here's where we can implement a load balancing algorithm
 	randomIndex := rand.Intn(len(candidates))
-	tr := &http.Transport{}
+	tr := &http.Transport{
+		ResponseHeaderTimeout: 10 * time.Minute,
+		IdleConnTimeout:       360 * time.Second,
+		DisableKeepAlives:     false,
+	}
 	node, _ := protocol.GetP2PNode(nil)
 	tr.RegisterProtocol("libp2p", p2phttp.NewTransport(node))
 	targetPeer := candidates[randomIndex]
