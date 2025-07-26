@@ -19,6 +19,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/routing"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/spf13/viper"
@@ -83,9 +84,42 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure resource manager with higher limits
+	limits := rcmgr.DefaultLimits.AutoScale()
+
+	// Increase connection limits significantly for a distributed system
+	systemLimits := rcmgr.ResourceLimits{
+		ConnsInbound:    1000,  // Allow up to 1000 inbound connections
+		ConnsOutbound:   1000,  // Allow up to 1000 outbound connections
+		Conns:           2000,  // Allow up to 2000 total connections
+		StreamsInbound:  10000, // Increase stream limits
+		StreamsOutbound: 10000,
+		Streams:         20000,
+		Memory:          1 << 30, // 1GB memory limit
+	}
+
+	// Apply the custom limits
+	finalLimits := rcmgr.PartialLimitConfig{
+		System: systemLimits,
+		// Keep default peer limits but increase them slightly
+		PeerDefault: rcmgr.ResourceLimits{
+			ConnsInbound:  16, // Allow more connections per peer
+			ConnsOutbound: 16,
+			Conns:         32,
+		},
+	}.Build(limits)
+
+	// Create resource manager
+	mgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(finalLimits))
+	if err != nil {
+		return nil, err
+	}
+
 	opts := []libp2p.Option{
 		libp2p.DefaultTransports,
 		libp2p.Identity(priv),
+		libp2p.ResourceManager(mgr), // Use our custom resource manager
 		// libp2p.ConnectionManager(connmgr),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
@@ -104,7 +138,23 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 			return ddht, err
 		}),
 	}
-	return libp2p.New(opts...)
+
+	host, err := libp2p.New(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log connection events for debugging
+	host.Network().Notify(&network.NotifyBundle{
+		ConnectedF: func(n network.Network, c network.Conn) {
+			common.Logger.Info("Connected to peer: ", c.RemotePeer(), " Total connections: ", len(n.Conns()))
+		},
+		DisconnectedF: func(n network.Network, c network.Conn) {
+			common.Logger.Info("Disconnected from peer: ", c.RemotePeer(), " Total connections: ", len(n.Conns()))
+		},
+	})
+
+	return host, nil
 }
 
 func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.DHT, error) {
@@ -162,4 +212,30 @@ func ConnectedBootstraps() []string {
 		}
 	}
 	return bootstraps
+}
+
+// GetResourceManagerStats returns current resource usage statistics
+func GetResourceManagerStats() {
+	host, _ := GetP2PNode(nil)
+	if rm := host.Network().ResourceManager(); rm != nil {
+		// Try to get stats if available
+		if statsGetter, ok := rm.(interface {
+			Stat() rcmgr.ResourceManagerStat
+		}); ok {
+			stats := statsGetter.Stat()
+			common.Logger.Infof("Resource Manager Stats - System: Conns=%d (in:%d out:%d), Streams=%d (in:%d out:%d), Memory=%d",
+				stats.System.NumConnsInbound+stats.System.NumConnsOutbound,
+				stats.System.NumConnsInbound,
+				stats.System.NumConnsOutbound,
+				stats.System.NumStreamsInbound+stats.System.NumStreamsOutbound,
+				stats.System.NumStreamsInbound,
+				stats.System.NumStreamsOutbound,
+				stats.System.Memory,
+			)
+		} else {
+			common.Logger.Info("Resource Manager present but stats not available")
+		}
+	} else {
+		common.Logger.Info("No Resource Manager configured")
+	}
 }

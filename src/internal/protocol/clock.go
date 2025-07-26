@@ -43,5 +43,22 @@ func StartTicker() {
 		}
 	})
 	common.ReportError(err, "Error while creating cleaning ticker")
+
+	// Add resource monitoring every 2 minutes
+	err = gocron.Every(2).Minutes().Do(func() {
+		GetResourceManagerStats()
+
+		// Also log current connection count for easy monitoring
+		connectedPeers := ConnectedPeers()
+		allPeers := AllPeers()
+		common.Logger.Infof("Connection Summary: %d connected peers, %d total known peers",
+			len(connectedPeers), len(allPeers))
+
+		// Log if we have very few connections (potential issue)
+		if len(connectedPeers) < 3 {
+			common.Logger.Warnf("Low connection count detected: only %d connected peers", len(connectedPeers))
+		}
+	})
+	common.ReportError(err, "Error while creating resource monitoring ticker")
 	<-gocron.Start()
 }
