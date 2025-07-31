@@ -153,7 +153,7 @@ func GlobalServiceForwardHandler(c *gin.Context) {
 		}
 	}
 	if len(candidates) < 1 {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "No provider found for the rquested service."})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "No provider found for the requested service."})
 		return
 	}
 	
