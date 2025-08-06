@@ -131,7 +131,7 @@ func DeleteNodeTableHook(key ds.Key) {
 
 func GetPeerFromTable(peerId string) (Peer, error) {
 	table := *GetNodeTable()
-	peer, ok := table[peerId]
+	peer, ok := table["/"+peerId]
 	if !ok {
 		return Peer{}, errors.New("peer not found")
 	}
