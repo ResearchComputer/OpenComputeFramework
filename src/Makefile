@@ -24,7 +24,7 @@ endif
 
 # Dependency versions
 GOTESTSUM_VERSION ?= 0.4.2
-GOLANGCI_VERSION ?= 1.48.0
+GOLANGCI_VERSION ?= 1.60.3
 
 GOLANG_VERSION ?= 1.14
 
@@ -161,6 +161,10 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 	@mkdir -p bin
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
+
+.PHONY: lint
+lint: bin/golangci-lint ## Run linters
+	bin/golangci-lint run ./...
 
 release-%: TAG_PREFIX = v
 release-%:
