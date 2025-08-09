@@ -72,6 +72,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 			if err != nil {
 				return nil, err
 			}
+			writeKeyToFile(priv)
 		}
 	} else {
 		r := mrand.New(mrand.NewSource(seed))
@@ -79,16 +80,13 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 		if err != nil {
 			return nil, err
 		}
+		writeKeyToFile(priv)
 	}
-	// persist private key
-	writeKeyToFile(priv)
 	if err != nil {
 		return nil, err
 	}
-
 	// Configure resource manager with higher limits
 	limits := rcmgr.DefaultLimits.AutoScale()
-
 	// Increase connection limits significantly for a distributed system
 	systemLimits := rcmgr.ResourceLimits{
 		ConnsInbound:    1000,  // Allow up to 1000 inbound connections
@@ -97,7 +95,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 		StreamsInbound:  10000, // Increase stream limits
 		StreamsOutbound: 10000,
 		Streams:         20000,
-		Memory:          1 << 30, // 1GB memory limit
+		Memory:          16 << 30, // 16GB memory limit
 	}
 
 	// Apply the custom limits

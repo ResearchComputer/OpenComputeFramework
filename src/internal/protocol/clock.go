@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"ocf/internal/common"
@@ -11,6 +12,7 @@ import (
 	ds "github.com/ipfs/go-datastore"
 	"github.com/jasonlvhit/gocron"
 	"github.com/libp2p/go-libp2p/core/network"
+	libpeer "github.com/libp2p/go-libp2p/core/peer"
 )
 
 // var verificationKey = "ocf-verification-key"
@@ -33,16 +35,29 @@ func StartTicker() {
 		// updateMyself()
 		for _, peer_id := range peers {
 			// check if peer is still connected
-			peer, error := GetPeerFromTable(peer_id.String())
+			p, error := GetPeerFromTable(peer_id.String())
 			if error == nil {
-				peer.Connected = true
+				p.Connected = true
 				if peer_id != host.ID() && host.Network().Connectedness(peer_id) != network.Connected {
-					common.Logger.Info("Peer:" + peer_id.String() + " got disconnected!")
-					peer.Connected = false
+					// try to dial the peer, if cannot dial, then mark it as disconnected
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+					addrInfo := libpeer.AddrInfo{ID: peer_id, Addrs: host.Peerstore().Addrs(peer_id)}
+					if len(addrInfo.Addrs) == 0 {
+						common.Logger.Warnf("No known addresses for peer %s; marking disconnected", peer_id)
+						p.Connected = false
+					} else if err := host.Connect(ctx, addrInfo); err != nil {
+						common.Logger.With("err", err).Warnf("Failed to dial peer %s; marking disconnected", peer_id)
+						p.Connected = false
+					} else {
+						// Successfully reconnected
+						common.Logger.Infof("Reconnected to peer %s", peer_id)
+						p.Connected = true
+					}
 				}
 				// update last seen timestamp
-				peer.LastSeen = time.Now().Unix()
-				value, err := json.Marshal(peer)
+				p.LastSeen = time.Now().Unix()
+				value, err := json.Marshal(p)
 				if err == nil {
 					UpdateNodeTableHook(ds.NewKey(peer_id.String()), value)
 				}
