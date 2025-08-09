@@ -60,5 +60,5 @@ func getDNT(c *gin.Context) {
 		{ingest.TimestampField: time.Now(), "event": "DNT Lookup"},
 	}
 	IngestEvents(events)
-	c.JSON(200, protocol.GetNodeTable())
+	c.JSON(200, protocol.GetConnectedPeers())
 }
