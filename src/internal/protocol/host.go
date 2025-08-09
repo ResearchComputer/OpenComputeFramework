@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	mrand "math/rand"
 	"ocf/internal/common"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/routing"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
+	connmgr "github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/spf13/viper"
@@ -52,15 +54,17 @@ func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 }
 
 func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host, error) {
-	// connmgr, err := connmgr.NewConnManager(
-	// 	50,
-	// 	500,
-	// 	connmgr.WithGracePeriod(time.Minute),
-	// )
-	// if err != nil {
-	// 	common.Logger.Error("Error while creating connection manager: %v", err)
-	// }
 	var err error
+	// Connection manager: maintain a larger pool of connections so we can exceed
+	// the pubsub mesh degree and keep more peers around.
+	cm, err := connmgr.NewConnManager(
+		100, // Low watermark
+		800, // High watermark
+		connmgr.WithGracePeriod(5*time.Minute),
+	)
+	if err != nil {
+		common.Logger.Error("Error while creating connection manager: ", err)
+	}
 	var priv crypto.PrivKey
 	// try to load the private key from file
 	if seed == 0 {
@@ -103,9 +107,9 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 		System: systemLimits,
 		// Keep default peer limits but increase them slightly
 		PeerDefault: rcmgr.ResourceLimits{
-			ConnsInbound:  16, // Allow more connections per peer
-			ConnsOutbound: 16,
-			Conns:         32,
+			ConnsInbound:  512, // Allow more connections per peer
+			ConnsOutbound: 512,
+			Conns:         1024,
 		},
 	}.Build(limits)
 
@@ -119,7 +123,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 		libp2p.DefaultTransports,
 		libp2p.Identity(priv),
 		libp2p.ResourceManager(mgr), // Use our custom resource manager
-		// libp2p.ConnectionManager(connmgr),
+		libp2p.ConnectionManager(cm),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport"),
@@ -149,9 +153,45 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 			common.Logger.Info("Connected to peer: ", c.RemotePeer(), " Total connections: ", len(n.Conns()))
 			// On (re)connections, re-announce local services
 			go ReannounceLocalServices()
+
+			// Mark peer as connected in node table immediately
+			go func(pid peer.ID) {
+				// Avoid updating self
+				if pid == host.ID() {
+					return
+				}
+				p, err := GetPeerFromTable(pid.String())
+				if err != nil {
+					p = Peer{ID: pid.String()}
+				}
+				p.Connected = true
+				p.LastSeen = time.Now().Unix()
+				if b, e := json.Marshal(p); e == nil {
+					UpdateNodeTableHook(datastore.NewKey(pid.String()), b)
+				} else {
+					common.Logger.Error("Failed to marshal peer on connect: ", e)
+				}
+			}(c.RemotePeer())
 		},
 		DisconnectedF: func(n network.Network, c network.Conn) {
 			common.Logger.Info("Disconnected from peer: ", c.RemotePeer(), " Total connections: ", len(n.Conns()))
+			// Mark peer as disconnected in node table immediately
+			go func(pid peer.ID) {
+				if pid == host.ID() {
+					return
+				}
+				p, err := GetPeerFromTable(pid.String())
+				if err != nil {
+					p = Peer{ID: pid.String()}
+				}
+				p.Connected = false
+				// keep LastSeen as last known good; do not bump here
+				if b, e := json.Marshal(p); e == nil {
+					UpdateNodeTableHook(datastore.NewKey(pid.String()), b)
+				} else {
+					common.Logger.Error("Failed to marshal peer on disconnect: ", e)
+				}
+			}(c.RemotePeer())
 		},
 	})
 
@@ -247,6 +287,11 @@ func ConnectedBootstraps() []string {
 			}
 		}
 	}
+	// add myself as bootstrap
+	myaddr := host.Addrs()[0].String() + "/p2p/" + host.ID().String()
+	bootstraps = append(bootstraps, myaddr)
+	// deduplicate
+	bootstraps = common.DeduplicateStrings(bootstraps)
 	return bootstraps
 }
 

@@ -124,7 +124,6 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 	common.ReportError(err, "Error while unmarshalling peer")
 	// Preserve locally computed connectivity status if we already know this peer
 	if existing, ok := table[key.String()]; ok {
-		peer.Connected = existing.Connected
 		// If LastSeen is missing in the update, keep the existing one
 		if peer.LastSeen == 0 {
 			peer.LastSeen = existing.LastSeen

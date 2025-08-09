@@ -37,9 +37,11 @@ func StartTicker() {
 			// check if peer is still connected
 			p, error := GetPeerFromTable(peer_id.String())
 			if error == nil {
-				p.Connected = true
-				if peer_id != host.ID() && host.Network().Connectedness(peer_id) != network.Connected {
+				if host.Network().Connectedness(peer_id) == network.Connected {
+					p.Connected = true
+				} else if peer_id != host.ID() && host.Network().Connectedness(peer_id) != network.Connected {
 					// try to dial the peer, if cannot dial, then mark it as disconnected
+					common.Logger.Info("Dialing ", peer_id.String(), "...")
 					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 					defer cancel()
 					addrInfo := libpeer.AddrInfo{ID: peer_id, Addrs: host.Peerstore().Addrs(peer_id)}
@@ -60,6 +62,8 @@ func StartTicker() {
 				value, err := json.Marshal(p)
 				if err == nil {
 					UpdateNodeTableHook(ds.NewKey(peer_id.String()), value)
+				} else {
+					common.Logger.Error("Error while marshalling peer: ", peer_id.String(), err)
 				}
 			}
 		}
