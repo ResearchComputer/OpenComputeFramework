@@ -80,8 +80,7 @@ ifeq (${VERBOSE}, 1)
 	go env
 endif
 	@mkdir -p ${BUILD_DIR}
-	GOARCH=arm64 go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./bin...
-	mv ${BUILD_DIR}/bin ${BUILD_DIR}/ocf-arm
+	GOARCH=arm64 go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./entry...
 	@${MAKE} post-build
 
 .PHONY: build
@@ -92,8 +91,7 @@ ifeq (${VERBOSE}, 1)
 endif
 
 	@mkdir -p ${BUILD_DIR}
-	go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./bin... 
-	mv ${BUILD_DIR}/bin ${BUILD_DIR}/ocf-amd64
+	go build ${GOARGS} -trimpath -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR} ./entry... 
 	@${MAKE} post-build
 
 .PHONY: build-release-deps
