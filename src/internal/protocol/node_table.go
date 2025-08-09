@@ -148,6 +148,16 @@ func GetPeerFromTable(peerId string) (Peer, error) {
 	return peer, nil
 }
 
+func GetConnectedPeers() *NodeTable {
+	var connected = NodeTable{}
+	for id, p := range *GetNodeTable() {
+		if p.Connected {
+			connected[id] = p
+		}
+	}
+	return &connected
+}
+
 func GetService(name string) (Service, error) {
 	host, _ := GetP2PNode(nil)
 	store, _ := GetCRDTStore()
