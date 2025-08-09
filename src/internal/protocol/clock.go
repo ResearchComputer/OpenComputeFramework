@@ -66,6 +66,9 @@ func StartTicker() {
 		// Log if we have very few connections (potential issue)
 		if len(connectedPeers) < 3 {
 			common.Logger.Warnf("Low connection count detected: only %d connected peers", len(connectedPeers))
+			Reconnect()
+			// best-effort re-announce our services after trying to reconnect
+			ReannounceLocalServices()
 		}
 	})
 	common.ReportError(err, "Error while creating resource monitoring ticker")

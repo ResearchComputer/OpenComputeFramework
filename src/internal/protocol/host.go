@@ -7,6 +7,7 @@ import (
 	"ocf/internal/common"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/ipfs/boxo/ipns"
 	"github.com/ipfs/go-datastore"
@@ -148,13 +149,50 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 	host.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(n network.Network, c network.Conn) {
 			common.Logger.Info("Connected to peer: ", c.RemotePeer(), " Total connections: ", len(n.Conns()))
+			// On (re)connections, re-announce local services
+			go ReannounceLocalServices()
 		},
 		DisconnectedF: func(n network.Network, c network.Conn) {
 			common.Logger.Info("Disconnected from peer: ", c.RemotePeer(), " Total connections: ", len(n.Conns()))
 		},
 	})
 
+	// Start a background auto-reconnector that watches connectivity
+	go startAutoReconnect(ctx, host)
+
 	return host, nil
+}
+
+// startAutoReconnect periodically checks if we lost connectivity and attempts to reconnect to bootstraps with backoff.
+func startAutoReconnect(ctx context.Context, h host.Host) {
+	// exponential backoff parameters
+	minDelay := 5 * time.Second
+	maxDelay := 2 * time.Minute
+	delay := minDelay
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(30 * time.Second):
+			// If very few or zero peers, try bootstrap
+			conns := h.Network().Conns()
+			if len(conns) == 0 {
+				common.Logger.Warn("No active P2P connections; attempting reconnect to bootstraps...")
+				Reconnect()
+				// after a reconnect attempt, wait with backoff if still disconnected
+				time.Sleep(delay)
+				if delay < maxDelay {
+					delay *= 2
+					if delay > maxDelay {
+						delay = maxDelay
+					}
+				}
+			} else {
+				// reset backoff when connected
+				delay = minDelay
+			}
+		}
+	}
 }
 
 func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.DHT, error) {

@@ -112,6 +112,10 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 
 func Reconnect() {
 	mode := viper.GetString("mode")
+	if ipfs == nil {
+		common.Logger.Warn("Reconnect requested but CRDT/IPFS not initialized yet; skipping")
+		return
+	}
 	addsInfo, err := peer.AddrInfosFromP2pAddrs(getDefaultBootstrapPeers(nil, mode)...)
 	common.ReportError(err, "Error while getting bootstrap peers")
 	ipfs.Bootstrap(addsInfo)
