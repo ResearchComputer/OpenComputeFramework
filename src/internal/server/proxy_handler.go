@@ -78,10 +78,12 @@ func ServiceForwardHandler(c *gin.Context) {
 	service, err := protocol.GetService(serviceName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	target := url.URL{
 		Scheme: "http",
@@ -112,20 +114,21 @@ func GlobalServiceForwardHandler(c *gin.Context) {
 	providers, err := protocol.GetAllProviders(serviceName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	// find proper service that are within the same identity group
 	// first filter by service name, then iterative over the identity groups
 	// always find all the services that are in the same identity group
 	var candidates []string
 	for _, provider := range providers {
-		selected := false
 		for _, service := range provider.Service {
 			if service.Name == serviceName {
-				selected = true
+				var selected = false
 				// check if the service is in the same identity group
 				if len(service.IdentityGroup) > 0 {
 					for _, ig := range service.IdentityGroup {
@@ -133,11 +136,9 @@ func GlobalServiceForwardHandler(c *gin.Context) {
 						igKey := igGroup[0]
 						igValue := igGroup[1]
 						requestGroup, err := jsonparser.GetString(body, igKey)
-						if err != nil {
-							selected = false
-						}
-						if requestGroup != igValue {
-							selected = false
+						if err == nil && requestGroup == igValue {
+							selected = true
+							break
 						}
 					}
 				}
@@ -148,6 +149,11 @@ func GlobalServiceForwardHandler(c *gin.Context) {
 			}
 		}
 	}
+	if len(candidates) < 1 {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "No provider found for the requested service."})
+		return
+	}
+
 	// randomly select one of the candidates
 	// here's where we can implement a load balancing algorithm
 	randomIndex := rand.Intn(len(candidates))

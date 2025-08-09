@@ -9,8 +9,6 @@ import (
 	"sync"
 
 	ds "github.com/ipfs/go-datastore"
-	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/viper"
 )
 
@@ -49,6 +47,8 @@ type Peer struct {
 	Version           string              `json:"version"`
 	PublicAddress     string              `json:"public_address"`
 	Hardware          common.HardwareSpec `json:"hardware"`
+	Connected         bool                `json:"connected"`
+	Load              []int               `json:"load"`
 }
 
 type PeerWithStatus struct {
@@ -61,26 +61,10 @@ type NodeTable map[string]Peer
 
 var dnt *NodeTable
 
-func GetNodeTable(reachableOnly bool) *NodeTable {
+func GetNodeTable() *NodeTable {
 	dntOnce.Do(func() {
 		dnt = &NodeTable{}
 	})
-	if reachableOnly {
-		host, _ := GetP2PNode(nil)
-		// filter out the nodes that are not connected
-		for _, p := range *dnt {
-			if host.Network().Connectedness(peer.ID(p.ID)) != network.Connected && p.ID != host.ID().String() {
-				// try to dial the peer
-				conn, err := host.Network().DialPeer(context.Background(), peer.ID(p.ID))
-				if err != nil {
-					common.Logger.Info("Peer: ", p.ID, " removed from table: ", err)
-					// delete(*dnt, key)
-				} else {
-					defer conn.Close()
-				}
-			}
-		}
-	}
 	return dnt
 }
 
@@ -133,7 +117,7 @@ func DeleteNodeTable() {
 }
 
 func UpdateNodeTableHook(key ds.Key, value []byte) {
-	table := *GetNodeTable(false)
+	table := *GetNodeTable()
 	var peer Peer
 	err := json.Unmarshal(value, &peer)
 	common.ReportError(err, "Error while unmarshalling peer")
@@ -141,13 +125,13 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 }
 
 func DeleteNodeTableHook(key ds.Key) {
-	table := *GetNodeTable(false)
+	table := *GetNodeTable()
 	delete(table, key.String())
 }
 
 func GetPeerFromTable(peerId string) (Peer, error) {
-	table := *GetNodeTable(false)
-	peer, ok := table[peerId]
+	table := *GetNodeTable()
+	peer, ok := table["/"+peerId]
 	if !ok {
 		return Peer{}, errors.New("peer not found")
 	}
@@ -173,11 +157,13 @@ func GetService(name string) (Service, error) {
 
 func GetAllProviders(serviceName string) ([]Peer, error) {
 	var providers []Peer
-	table := *GetNodeTable(false)
+	table := *GetNodeTable()
 	for _, peer := range table {
-		for _, service := range peer.Service {
-			if service.Name == serviceName {
-				providers = append(providers, peer)
+		if peer.Connected {
+			for _, service := range peer.Service {
+				if service.Name == serviceName {
+					providers = append(providers, peer)
+				}
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"encoding/json"
 	"math/rand"
 	"ocf/internal/common"
 	"ocf/internal/common/process"
@@ -29,11 +30,19 @@ func StartTicker() {
 		host, _ := GetP2PNode(nil)
 		peers := host.Peerstore().Peers()
 		// updateMyself()
-		for _, peer := range peers {
+		for _, peer_id := range peers {
 			// check if peer is still connected
-			if peer != host.ID() && host.Network().Connectedness(peer) != network.Connected {
-				// delete peer from table
-				DeleteNodeTableHook(ds.NewKey(peer.String()))
+			peer, error := GetPeerFromTable(peer_id.String())
+			if error == nil {
+				peer.Connected = true
+				if peer_id != host.ID() && host.Network().Connectedness(peer_id) != network.Connected {
+					common.Logger.Info("Peer:" + peer_id.String() + " got disconnected!")
+					peer.Connected = false
+				}
+				value, err := json.Marshal(peer)
+				if err == nil {
+					UpdateNodeTableHook(ds.NewKey(peer_id.String()), value)
+				}
 			}
 		}
 		if !process.HealthCheck() {

@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"ocf/internal/common"
 	"sync"
@@ -79,7 +80,16 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		opts.RebroadcastInterval = 5 * time.Second
 		opts.PutHook = func(k ds.Key, v []byte) {
 			fmt.Printf("Added: [%s] -> %s\n", k, string(v))
-			UpdateNodeTableHook(k, v)
+			var peer Peer
+			err := json.Unmarshal(v, &peer)
+			common.ReportError(err, "Error while unmarshalling peer")
+			peer.Connected = true
+			value, err := json.Marshal(peer)
+			if err == nil {
+				UpdateNodeTableHook(k, value)
+			} else {
+				common.Logger.Error("Error while marshalling peer", err)
+			}
 		}
 		opts.DeleteHook = func(k ds.Key) {
 			fmt.Printf("Removed: [%s]\n", k)

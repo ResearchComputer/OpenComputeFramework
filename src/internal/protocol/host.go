@@ -200,7 +200,7 @@ func AllPeers() []*PeerWithStatus {
 
 func ConnectedBootstraps() []string {
 	var bootstraps = []string{}
-	dnt := GetNodeTable(false)
+	dnt := GetNodeTable()
 	host, _ := GetP2PNode(nil)
 	for _, p := range *dnt {
 		if p.PublicAddress != "" {
