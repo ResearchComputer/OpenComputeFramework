@@ -28,6 +28,7 @@ func listBootstraps(c *gin.Context) {
 func updateLocal(c *gin.Context) {
 	var peer protocol.Peer
 	c.BindJSON(&peer)
+	peer.Connected = true
 	protocol.UpdateNodeTable(peer)
 }
 
@@ -42,5 +43,5 @@ func getDNT(c *gin.Context) {
 		{ingest.TimestampField: time.Now(), "event": "DNT Lookup"},
 	}
 	IngestEvents(events)
-	c.JSON(200, protocol.GetNodeTable(false))
+	c.JSON(200, protocol.GetNodeTable())
 }
