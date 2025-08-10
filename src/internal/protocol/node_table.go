@@ -7,6 +7,7 @@ import (
 	"ocf/internal/common"
 	"ocf/internal/platform"
 	"sync"
+	"time"
 
 	ds "github.com/ipfs/go-datastore"
 	"github.com/spf13/viper"
@@ -121,6 +122,15 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 	var peer Peer
 	err := json.Unmarshal(value, &peer)
 	common.ReportError(err, "Error while unmarshalling peer")
+	// Preserve locally computed connectivity status if we already know this peer
+	if existing, ok := table[key.String()]; ok {
+		// If LastSeen is missing in the update, keep the existing one
+		if peer.LastSeen == 0 {
+			peer.LastSeen = existing.LastSeen
+		}
+	}
+	// Always update LastSeen on any CRDT update we receive for that peer
+	peer.LastSeen = time.Now().Unix()
 	table[key.String()] = peer
 }
 
@@ -191,6 +201,7 @@ func InitializeMyself() {
 	myself = Peer{
 		ID:            host.ID().String(),
 		PublicAddress: viper.GetString("public-addr"),
+		LastSeen:      time.Now().Unix(),
 	}
 	myself.Hardware.GPUs = platform.GetGPUInfo()
 	value, err := json.Marshal(myself)
