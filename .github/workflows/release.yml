@@ -1,0 +1,36 @@
+name: Build and Release Go Binary
+
+on:
+  push:
+    tags:
+      - 'v*'   # Run when pushing a version tag like v1.0.0
+
+jobs:
+  build:
+    name: Build Go Binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: src/go.mod
+          cache: true
+
+      - name: Build production binary
+        run: |
+          cd src
+          build-release
+
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/release/ocf-amd64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
