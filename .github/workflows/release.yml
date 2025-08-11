@@ -23,7 +23,7 @@ jobs:
       - name: Build production binary
         run: |
           cd src
-          build-release
+          make build-release
 
 
       - name: Create GitHub Release
