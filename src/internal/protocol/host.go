@@ -122,8 +122,8 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 	opts := []libp2p.Option{
 		libp2p.DefaultTransports,
 		libp2p.Identity(priv),
-		libp2p.ResourceManager(mgr), // Use our custom resource manager
-		libp2p.ConnectionManager(cm),
+		libp2p.ResourceManager(&network.NullResourceManager{}),
+		// libp2p.ConnectionManager(connmgr),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport"),
@@ -237,7 +237,7 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 	dhtOpts := []dualdht.Option{
 		dualdht.DHTOption(dht.NamespacedValidator("pk", record.PublicKeyValidator{})),
 		dualdht.DHTOption(dht.NamespacedValidator("ipns", ipns.Validator{KeyBook: h.Peerstore()})),
-		// dualdht.DHTOption(dht.Concurrency(500)),
+		dualdht.DHTOption(dht.Concurrency(512)),
 		dualdht.DHTOption(dht.Mode(dht.ModeAuto)),
 	}
 	if ds != nil {
