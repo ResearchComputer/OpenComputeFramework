@@ -22,7 +22,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/routing"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
-	connmgr "github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/spf13/viper"
@@ -55,13 +54,6 @@ func GetP2PNode(ds datastore.Batching) (host.Host, dualdht.DHT) {
 
 func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host, error) {
 	var err error
-	// Connection manager: maintain a larger pool of connections so we can exceed
-	// the pubsub mesh degree and keep more peers around.
-	cm, err := connmgr.NewConnManager(
-		100, // Low watermark
-		800, // High watermark
-		connmgr.WithGracePeriod(5*time.Minute),
-	)
 	if err != nil {
 		common.Logger.Error("Error while creating connection manager: ", err)
 	}
@@ -89,41 +81,11 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 	if err != nil {
 		return nil, err
 	}
-	// Configure resource manager with higher limits
-	limits := rcmgr.DefaultLimits.AutoScale()
-	// Increase connection limits significantly for a distributed system
-	systemLimits := rcmgr.ResourceLimits{
-		ConnsInbound:    1000,  // Allow up to 1000 inbound connections
-		ConnsOutbound:   1000,  // Allow up to 1000 outbound connections
-		Conns:           2000,  // Allow up to 2000 total connections
-		StreamsInbound:  10000, // Increase stream limits
-		StreamsOutbound: 10000,
-		Streams:         20000,
-		Memory:          16 << 30, // 16GB memory limit
-	}
-
-	// Apply the custom limits
-	finalLimits := rcmgr.PartialLimitConfig{
-		System: systemLimits,
-		// Keep default peer limits but increase them slightly
-		PeerDefault: rcmgr.ResourceLimits{
-			ConnsInbound:  512, // Allow more connections per peer
-			ConnsOutbound: 512,
-			Conns:         1024,
-		},
-	}.Build(limits)
-
-	// Create resource manager
-	mgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(finalLimits))
-	if err != nil {
-		return nil, err
-	}
 
 	opts := []libp2p.Option{
 		libp2p.DefaultTransports,
 		libp2p.Identity(priv),
 		libp2p.ResourceManager(&network.NullResourceManager{}),
-		// libp2p.ConnectionManager(connmgr),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport"),
