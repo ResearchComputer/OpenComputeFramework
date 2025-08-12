@@ -61,6 +61,7 @@ type PeerWithStatus struct {
 type NodeTable map[string]Peer
 
 var dnt *NodeTable
+var tableUpdateSem = make(chan struct{}, 1) // capacity 1 → max 1 goroutine at a time
 
 func GetNodeTable() *NodeTable {
 	dntOnce.Do(func() {
@@ -117,14 +118,15 @@ func DeleteNodeTable() {
 	store.Delete(ctx, key)
 }
 
-var tableUpdateSem = make(chan struct{}, 1) // capacity 1 → max 1 goroutine at a time
-
 func UpdateNodeTableHook(key ds.Key, value []byte) {
 	table := *GetNodeTable()
 	var peer Peer
 	err := json.Unmarshal(value, &peer)
 	common.ReportError(err, "Error while unmarshalling peer")
 	// Preserve locally computed connectivity status if we already know this peer
+	tableUpdateSem <- struct{}{}
+	defer func() { <-tableUpdateSem }() // Release on exit
+
 	if existing, ok := table[key.String()]; ok {
 		// If LastSeen is missing in the update, keep the existing one
 		if peer.LastSeen == 0 {
@@ -133,9 +135,6 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 	}
 	// Always update LastSeen on any CRDT update we receive for that peer
 	peer.LastSeen = time.Now().Unix()
-
-	tableUpdateSem <- struct{}{}
-	defer func() { <-tableUpdateSem }() // Release on exit
 	table[key.String()] = peer
 }
 
@@ -148,6 +147,8 @@ func DeleteNodeTableHook(key ds.Key) {
 
 func GetPeerFromTable(peerId string) (Peer, error) {
 	table := *GetNodeTable()
+	tableUpdateSem <- struct{}{}
+	defer func() { <-tableUpdateSem }() // Release on exit
 	peer, ok := table["/"+peerId]
 	if !ok {
 		return Peer{}, errors.New("peer not found")
@@ -157,6 +158,8 @@ func GetPeerFromTable(peerId string) (Peer, error) {
 
 func GetConnectedPeers() *NodeTable {
 	var connected = NodeTable{}
+	tableUpdateSem <- struct{}{}
+	defer func() { <-tableUpdateSem }() // Release on exit
 	for id, p := range *GetNodeTable() {
 		if p.Connected {
 			connected[id] = p
@@ -185,6 +188,8 @@ func GetService(name string) (Service, error) {
 func GetAllProviders(serviceName string) ([]Peer, error) {
 	var providers []Peer
 	table := *GetNodeTable()
+	tableUpdateSem <- struct{}{}
+	defer func() { <-tableUpdateSem }() // Release on exit
 	for _, peer := range table {
 		if peer.Connected {
 			for _, service := range peer.Service {
