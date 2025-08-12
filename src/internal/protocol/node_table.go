@@ -117,6 +117,8 @@ func DeleteNodeTable() {
 	store.Delete(ctx, key)
 }
 
+var tableUpdateSem = make(chan struct{}, 1) // capacity 1 → max 1 goroutine at a time
+
 func UpdateNodeTableHook(key ds.Key, value []byte) {
 	table := *GetNodeTable()
 	var peer Peer
@@ -131,11 +133,16 @@ func UpdateNodeTableHook(key ds.Key, value []byte) {
 	}
 	// Always update LastSeen on any CRDT update we receive for that peer
 	peer.LastSeen = time.Now().Unix()
+
+	tableUpdateSem <- struct{}{}
+	defer func() { <-tableUpdateSem }() // Release on exit
 	table[key.String()] = peer
 }
 
 func DeleteNodeTableHook(key ds.Key) {
 	table := *GetNodeTable()
+	tableUpdateSem <- struct{}{}
+	defer func() { <-tableUpdateSem }() // Release on exit
 	delete(table, key.String())
 }
 
