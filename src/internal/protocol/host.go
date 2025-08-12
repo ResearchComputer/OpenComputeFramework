@@ -86,6 +86,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 		libp2p.DefaultTransports,
 		libp2p.Identity(priv),
 		libp2p.ResourceManager(&network.NullResourceManager{}),
+		// libp2p.ConnectionManager(connmgr),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/tcp/"+viper.GetString("tcpport"),
