@@ -37,6 +37,8 @@ services:
       dockerfile: ./local-demo/docker/llm-serving/Dockerfile
       args:
         OCF_IMAGE: ocf-amd64:latest
+    depends_on:
+      - global-dispatcher
     command:
       [
         "start",
