@@ -41,7 +41,6 @@ func StartTicker() {
 					p.Connected = true
 				} else if peer_id != host.ID() && host.Network().Connectedness(peer_id) != network.Connected {
 					// try to dial the peer, if cannot dial, then mark it as disconnected
-					common.Logger.Info("Dialing ", peer_id.String(), "...")
 					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 					defer cancel()
 					addrInfo := libpeer.AddrInfo{ID: peer_id, Addrs: host.Peerstore().Addrs(peer_id)}
