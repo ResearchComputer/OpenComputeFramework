@@ -148,6 +148,9 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 				p, err := GetPeerFromTable(pid.String())
 				if err != nil {
 					p = Peer{ID: pid.String()}
+					common.Logger.Infof("Adding peer: [%s] triggered by new connection", pid.String())
+				} else {
+					common.Logger.Infof("Updating peer: [%s] triggered by new connection", pid.String())
 				}
 				p.Connected = true
 				p.LastSeen = time.Now().Unix()
@@ -170,6 +173,7 @@ func newHost(ctx context.Context, seed int64, ds datastore.Batching) (host.Host,
 					p = Peer{ID: pid.String()}
 				}
 				p.Connected = false
+				common.Logger.Infof("Removing peer: [%s] triggered by disconnection", pid.String())
 				// keep LastSeen as last known good; do not bump here
 				if b, e := json.Marshal(p); e == nil {
 					UpdateNodeTableHook(datastore.NewKey(pid.String()), b)

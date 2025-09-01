@@ -65,6 +65,9 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 				p, gerr := GetPeerFromTable(msg.ReceivedFrom.String())
 				if gerr != nil {
 					p = Peer{ID: msg.ReceivedFrom.String()}
+					common.Logger.Infof("Adding peer: [%s] triggered by msg received", msg.ReceivedFrom.String())
+				} else {
+					common.Logger.Infof("Updating peer: [%s] triggered by msg received", msg.ReceivedFrom.String())
 				}
 				p.LastSeen = time.Now().Unix()
 				p.Connected = true
@@ -109,10 +112,10 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 			p, err := GetPeerFromTable(strings.Trim(k.String(), "/"))
 			if err != nil {
 				peer.Connected = false
-				fmt.Printf("Adding peer: [%s] -> %s\n", k, string(v))
+				common.Logger.Infof("Adding peer: [%s] triggered by p2p hook", strings.Trim(k.String(), "/"))
 			} else {
 				peer.Connected = p.Connected
-				fmt.Printf("Updating peer: [%s] -> %s\n", k, string(v))
+				common.Logger.Infof("Updating peer: [%s] triggered by p2p hook", strings.Trim(k.String(), "/"))
 			}
 			value, err := json.Marshal(peer)
 			if err == nil {
@@ -122,7 +125,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 			}
 		}
 		opts.DeleteHook = func(k ds.Key) {
-			fmt.Printf("Removed: [%s]\n", k)
+			common.Logger.Infof("Removed: [%s] triggered by p2p hook", strings.Trim(k.String(), "/"))
 			DeleteNodeTableHook(k)
 		}
 
