@@ -67,6 +67,7 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 					p = Peer{ID: msg.ReceivedFrom.String()}
 				}
 				p.LastSeen = time.Now().Unix()
+				p.Connected = true
 				if b, merr := json.Marshal(p); merr == nil {
 					UpdateNodeTableHook(ds.NewKey(msg.ReceivedFrom.String()), b)
 				}
@@ -99,6 +100,12 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 			common.ReportError(err, "Error while unmarshalling peer")
 			// When a new peer is added to the table it is marked as diconnected by default.
 			// Doing so allows to intercept ghost peers by the verification procedure.
+
+			// Do not update itself
+			host, _ := GetP2PNode(nil)
+			if strings.Trim(k.String(), "/") == host.ID().String() {
+				return
+			}
 			p, err := GetPeerFromTable(strings.Trim(k.String(), "/"))
 			if err != nil {
 				peer.Connected = false
