@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"ocf/internal/common"
+	"strings"
 	"sync"
 	"time"
 
@@ -93,11 +94,19 @@ func GetCRDTStore() (*crdt.Datastore, context.CancelFunc) {
 		opts.Logger = common.Logger
 		opts.RebroadcastInterval = 5 * time.Second
 		opts.PutHook = func(k ds.Key, v []byte) {
-			fmt.Printf("Added: [%s] -> %s\n", k, string(v))
 			var peer Peer
 			err := json.Unmarshal(v, &peer)
 			common.ReportError(err, "Error while unmarshalling peer")
-			peer.Connected = true
+			// When a new peer is added to the table it is marked as diconnected by default.
+			// Doing so allows to intercept ghost peers by the verification procedure.
+			p, err := GetPeerFromTable(strings.Trim(k.String(), "/"))
+			if err != nil {
+				peer.Connected = false
+				fmt.Printf("Adding peer: [%s] -> %s\n", k, string(v))
+			} else {
+				peer.Connected = p.Connected
+				fmt.Printf("Updating peer: [%s] -> %s\n", k, string(v))
+			}
 			value, err := json.Marshal(peer)
 			if err == nil {
 				UpdateNodeTableHook(k, value)
