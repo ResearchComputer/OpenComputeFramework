@@ -1,0 +1,26 @@
+# Development directories
+.claude/
+tests/
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db

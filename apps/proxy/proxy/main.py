@@ -1,18 +1,18 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
-import httpx
+import aiohttp
 import os
 from typing import Optional, Dict, Any
 import asyncio
 import json
+from .utils import get_all_models
 
 app = FastAPI(title="OpenAI Compatible Proxy Service")
 
-TARGET_SERVICE_URL = os.getenv("TARGET_SERVICE_URL", "http://localhost:8000/v1")
-TIMEOUT = float(os.getenv("TIMEOUT", "30.0"))
+OCF_HEAD_URL = os.getenv("OCF_HEAD_URL", "http://140.238.223.116:8092")
 
 async def proxy_request(
-    client: httpx.AsyncClient,
+    session: aiohttp.ClientSession,
     method: str,
     url: str,
     headers: Dict[str, str],
@@ -20,27 +20,26 @@ async def proxy_request(
     params: Optional[Dict[str, Any]] = None
 ) -> JSONResponse:
     try:
-        response = await client.request(
+        async with session.request(
             method=method,
             url=url,
             headers=headers,
-            content=content,
-            params=params,
-            timeout=TIMEOUT
-        )
-
-        return JSONResponse(
-            status_code=response.status_code,
-            content=response.json(),
-            headers=dict(response.headers)
-        )
-    except httpx.TimeoutException:
+            data=content,
+            params=params
+        ) as response:
+            response_data = await response.json()
+            return JSONResponse(
+                status_code=response.status,
+                content=response_data,
+                headers=dict(response.headers)
+            )
+    except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Request timeout")
-    except httpx.RequestError as e:
+    except aiohttp.ClientError as e:
         raise HTTPException(status_code=502, detail=f"Request failed: {str(e)}")
     except json.JSONDecodeError:
         return JSONResponse(
-            status_code=response.status_code,
+            status_code=response.status,
             content={"error": "Invalid JSON response"},
             headers=dict(response.headers)
         )
@@ -48,23 +47,19 @@ async def proxy_request(
 @app.api_route("/v1/chat/completions", methods=["POST"])
 @app.api_route("/v1/completions", methods=["POST"])
 @app.api_route("/v1/embeddings", methods=["POST"])
-@app.api_route("/v1/models", methods=["GET"])
 async def openai_proxy(request: Request):
     method = request.method
     path = request.url.path
-
-    target_url = f"{TARGET_SERVICE_URL}{path}"
-
+    target_url = f"{OCF_HEAD_URL}/v1/service/llm{path}"
     headers = dict(request.headers)
     headers.pop("host", None)
-
     content = await request.body()
 
     query_params = dict(request.query_params)
 
-    async with httpx.AsyncClient() as client:
+    async with aiohttp.ClientSession() as session:
         return await proxy_request(
-            client=client,
+            session=session,
             method=method,
             url=target_url,
             headers=headers,
@@ -74,7 +69,19 @@ async def openai_proxy(request: Request):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "openai-proxy"}
+    return {"status": "healthy", "service": "ocf-entry"}
+
+
+@app.get("/v1/models")
+async def list_models():
+    try:
+        models = await get_all_models(f"{OCF_HEAD_URL}/v1/dnt/table")
+        return {
+            "object": "list",
+            "data": models
+        }
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch models: {str(e)}")
 
 @app.get("/")
 async def root():

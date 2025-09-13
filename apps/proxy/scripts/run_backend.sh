@@ -1,0 +1,1 @@
+docker run --rm -p 10590:10590 -d researchcomputer/ocf-proxy
