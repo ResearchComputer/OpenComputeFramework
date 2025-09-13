@@ -6,6 +6,7 @@ import (
 	"errors"
 	"ocf/internal/common"
 	"ocf/internal/platform"
+	"ocf/internal/wallet"
 	"sync"
 	"time"
 
@@ -82,6 +83,10 @@ func UpdateNodeTable(peer Peer) {
 	existingPeer, err := GetPeerFromTable(peer.ID)
 	if err == nil {
 		peer.Service = append(peer.Service, existingPeer.Service...)
+		// Preserve existing provider if not set in the update
+		if peer.Owner == "" && existingPeer.Owner != "" {
+			peer.Owner = existingPeer.Owner
+		}
 	}
 	if viper.GetString("public-addr") != "" {
 		peer.PublicAddress = viper.GetString("public-addr")
@@ -233,6 +238,23 @@ func InitializeMyself() {
 		LastSeen:      time.Now().Unix(),
 		Connected:     true,
 	}
+
+	// Add wallet address as provider if available
+	if viper.IsSet("account.wallet") {
+		walletPath := viper.GetString("account.wallet")
+		if walletPath != "" {
+			wm := wallet.NewWalletManager()
+			if wm.WalletExists() {
+				if err := wm.LoadWallet(); err == nil {
+					myself.Owner = wm.GetPublicKey()
+					common.Logger.Infof("Added wallet address as provider: %s", myself.Owner)
+				} else {
+					common.Logger.Warnf("Failed to load wallet for provider address: %v", err)
+				}
+			}
+		}
+	}
+
 	myself.Hardware.GPUs = platform.GetGPUInfo()
 	value, err := json.Marshal(myself)
 	common.ReportError(err, "Error while marshalling peer")

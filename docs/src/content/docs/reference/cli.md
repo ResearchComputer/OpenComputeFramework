@@ -13,15 +13,20 @@ The released binaries are named by architecture (e.g., `ocf-amd64`). The CLI roo
 
 # Commands
 
-- start: Start the node and HTTP API.
-- version: Print version information.
-- init: Initialize config (placeholder).
+- **start**: Start the node and HTTP API.
+- **wallet**: Wallet management commands for node owner identification.
+  - **create**: Create a new wallet for node identification.
+  - **load**: Load an existing wallet.
+  - **info**: Show wallet information including public key.
+- **version**: Print version information.
+- **init**: Initialize config (placeholder).
+- **update**: Update the node (placeholder).
 
 # Flags (start)
 
-- `--wallet.account` string: Wallet account.
+- `--wallet.account` string: Wallet account for node identification.
 - `--bootstrap.addr` string: Bootstrap source (HTTP URL returning `{"bootstraps": ["/ip4/x/tcp/43905/p2p/<ID>"]}` or a single multiaddr). Default: `http://152.67.71.5:8092/v1/dnt/bootstraps`.
-- `--seed` string: Seed for deterministic peer key (use `0` to persist/load key).
+- `--seed` string: Seed for deterministic peer key (use `0` to persist/load key). Default: `0`.
 - `--mode` string: `standalone`, `local`, or `node`/`full` (default `node`).
 - `--tcpport` string: LibP2P TCP port. Default `43905`.
 - `--udpport` string: LibP2P QUIC UDP port. Default `59820`.
@@ -30,6 +35,10 @@ The released binaries are named by architecture (e.g., `ocf-amd64`). The CLI roo
 - `--service.name` string: Local service name to register (e.g., `llm`).
 - `--service.port` string: Local service port to register (e.g., `8080`).
 - `--cleanslate` bool: Remove local CRDT db on start. Default `true`.
+
+# Global Flags
+
+- `--config` string: Config file path (default is `$HOME/.config/ocf/cfg.yaml`).
 
 # Examples
 
@@ -57,6 +66,32 @@ Register a local LLM service (worker):
 ./ocf-amd64 start \
   --service.name=llm \
   --service.port=8080
+```
+
+# Wallet Management
+
+Create a new wallet for node identification:
+
+```bash
+./ocf-amd64 wallet create
+```
+
+Load an existing wallet:
+
+```bash
+./ocf-amd64 wallet load
+```
+
+Show wallet information:
+
+```bash
+./ocf-amd64 wallet info
+```
+
+Start a node with wallet identification:
+
+```bash
+./ocf-amd64 start --wallet.account=<wallet_address>
 ```
 
 

@@ -26,7 +26,7 @@ vacuum:
 queue:
   port: "8094"
 account:
-  wallet: ""
+  wallet: ""       # Wallet account address for node identification
 seed: "0"          # 0 = persisted/random key
 tcp_port: "43905"  # LibP2P TCP/WS
 udp_port: "59820"  # LibP2P QUIC
@@ -63,6 +63,13 @@ Worker registering an LLM service:
 service:
   name: llm
   port: "8080"
+```
+
+Node with wallet identification:
+
+```yaml
+account:
+  wallet: "your_wallet_address_here"
 ```
 
 
