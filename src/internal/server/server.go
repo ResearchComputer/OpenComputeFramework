@@ -6,6 +6,7 @@ import (
 	"ocf/internal/common"
 	"ocf/internal/common/process"
 	"ocf/internal/protocol"
+	"ocf/internal/wallet"
 	"os/signal"
 	"syscall"
 	"time"
@@ -15,6 +16,12 @@ import (
 )
 
 func StartServer() {
+	walletManager, err := wallet.InitializeWallet()
+	if err != nil {
+		common.Logger.Fatalf("Failed to initialize wallet: %v", err)
+	}
+	common.Logger.Infof("Server wallet initialized. Public key: %s", walletManager.GetPublicKey())
+
 	protocol.InitializeMyself()
 	_, cancelCtx := protocol.GetCRDTStore()
 	defer cancelCtx()
