@@ -1,14 +1,21 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-import aiohttp
 import os
-from typing import Optional, Dict, Any
-import asyncio
 import json
+import aiohttp
+import asyncio
+from typing import Optional, Dict, Any
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, HTTPException
 from .utils import get_all_models
 
 app = FastAPI(title="OpenAI Compatible Proxy Service")
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 OCF_HEAD_URL = os.getenv("OCF_HEAD_URL", "http://140.238.223.116:8092")
 
 async def proxy_request(
