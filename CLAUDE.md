@@ -14,17 +14,23 @@ The Open Compute Framework (OCF) is a decentralized computing platform that comb
    - Implements CRDT-backed service registry and peer discovery
    - HTTP gateway (port 8092) and P2P HTTP over LibP2P
    - Multi-modal operation: standalone, local, and networked modes
+   - Entry points in `src/entry/cmd/` with wallet management capabilities
 
 2. **Frontend (Next.js)** - `apps/web/`: Modern React web application
    - Web3 wallet integration with wagmi and ethers
    - Responsive UI with Radix UI and Tailwind CSS
    - TypeScript with strict configuration
 
-3. **Blockchain (Solana)** - `tokens/`: Token economics and incentives
+3. **Proxy Service (Python)** - `apps/proxy/`: FastAPI-based OpenAI-compatible proxy
+   - Async request handling with timeout management
+   - Routes to OpenAI-compatible endpoints (/v1/chat/completions, etc.)
+   - Docker containerization support
+
+4. **Blockchain (Solana)** - `tokens/`: Token economics and incentives
    - Anchor framework for Solana smart contracts
    - Rust-based token implementation
 
-4. **Documentation (Astro)** - `docs/`: Comprehensive project documentation
+5. **Documentation (Astro)** - `docs/`: Comprehensive project documentation
    - Starlight theme with professional styling
 
 ## Development Commands
@@ -72,6 +78,24 @@ npm run lint:fix     # Fix code formatting
 yarn run ts-mocha    # Run TypeScript tests
 ```
 
+### Proxy Service (Python)
+
+From the `apps/proxy/` directory:
+
+```bash
+# Local development
+pip install -r requirements.txt
+python main.py
+
+# Docker build and run
+./scripts/build_docker.sh
+docker run -p 8000:8000 researchcomputer/ocf-proxy
+
+# Environment variables
+TARGET_SERVICE_URL=http://localhost:8000/v1  # Target service URL
+TIMEOUT=30.0                                 # Request timeout in seconds
+```
+
 ### Documentation (Astro)
 
 From the `docs/` directory:
@@ -116,8 +140,10 @@ npm run preview      # Preview built site
 
 - **Version**: Go 1.23.0 required
 - **Build Output**: `build/` directory
+- **Entry Points**: `src/entry/cmd/` with CLI commands (start, config, wallet, etc.)
 - **Linting**: golangci-lint v1.61.0
 - **Testing**: gotestsum v0.4.2 with coverage reports
+- **Wallet Management**: Integrated wallet functionality for node owner identification
 
 ### Multi-Architecture Support
 
@@ -136,8 +162,9 @@ Key build-time environment variables:
 
 1. **Backend Changes**: Work in `src/`, use `make build && make run` for testing
 2. **Frontend Changes**: Work in `apps/web/`, use `npm run dev` for hot reload
-3. **Blockchain Changes**: Work in `tokens/`, use Anchor tooling for deployment
-4. **Documentation**: Work in `docs/`, use Astro dev server for preview
+3. **Proxy Service**: Work in `apps/proxy/`, use `python main.py` for local testing
+4. **Blockchain Changes**: Work in `tokens/`, use Anchor tooling for deployment
+5. **Documentation**: Work in `docs/`, use Astro dev server for preview
 
 ## Code Style and Conventions
 
@@ -151,6 +178,12 @@ Key build-time environment variables:
 - ESLint configuration for code quality
 - Tailwind CSS utility classes for styling
 - Radix UI components for accessibility
+
+### Proxy Service
+- FastAPI with async request handling
+- Python type hints with pydantic validation
+- Docker containerization for deployment
+- Environment-based configuration
 
 ### Blockchain
 - Rust smart contracts with Anchor framework

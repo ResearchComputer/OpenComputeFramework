@@ -7,8 +7,14 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request, HTTPException
 from .utils import get_all_models
+from .database import init_db
+from .routers import router as auth_router
+from .models_api import router as models_router
+from .middleware import RateLimitMiddleware, ErrorHandlerMiddleware, SecurityHeadersMiddleware
 
 app = FastAPI(title="OpenAI Compatible Proxy Service")
+
+# Add middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,6 +22,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ErrorHandlerMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
 OCF_HEAD_URL = os.getenv("OCF_HEAD_URL", "http://140.238.223.116:8092")
 
 async def proxy_request(
@@ -90,6 +99,10 @@ async def list_models():
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch models: {str(e)}")
 
+# Include routers
+app.include_router(auth_router)
+app.include_router(models_router)
+
 @app.get("/")
 async def root():
     return {
@@ -99,9 +112,23 @@ async def root():
             "POST /v1/chat/completions",
             "POST /v1/completions",
             "POST /v1/embeddings",
-            "GET /v1/models"
+            "GET /v1/models",
+            "POST /api/auth/connect",
+            "GET /api/user/profile",
+            "POST /api/api-keys",
+            "GET /api/api-keys",
+            "DELETE /api/api-keys/{key_id}",
+            "GET /api/models",
+            "GET /api/models/public",
+            "POST /api/v1/chat/completions",
+            "POST /api/v1/completions"
         ]
     }
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    init_db()
 
 if __name__ == "__main__":
     import uvicorn
