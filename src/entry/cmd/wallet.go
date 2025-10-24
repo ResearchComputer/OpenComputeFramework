@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"ocf/internal/wallet"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -14,64 +15,83 @@ var walletCmd = &cobra.Command{
 
 var walletCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a new wallet",
+	Short: "Create a new Solana account managed by OCF",
 	Run: func(cmd *cobra.Command, args []string) {
-		wm := wallet.NewWalletManager()
-		if wm.WalletExists() {
-			fmt.Printf("Wallet already exists at %s\n", wm.GetWalletPath())
+		wm, err := wallet.NewWalletManager()
+		if err != nil {
+			fmt.Printf("Failed to initialize wallet manager: %v\n", err)
 			return
 		}
 
-		if err := wm.CreateWallet(); err != nil {
-			fmt.Printf("Failed to create wallet: %v\n", err)
+		account, err := wm.AddSolanaAccount()
+		if err != nil {
+			fmt.Printf("Failed to create Solana account: %v\n", err)
 			return
 		}
-		fmt.Printf("Wallet created successfully at %s\n", wm.GetWalletPath())
-		fmt.Printf("Public Key: %s\n", wm.GetPublicKey())
+
+		fmt.Printf("Created Solana account %s\n", account.PublicKey)
+		fmt.Printf("Keypair stored at %s\n", account.FilePath)
+		if len(wm.Accounts()) == 1 {
+			fmt.Println("This account is set as the default wallet.")
+		} else {
+			fmt.Println("Use `ocf wallet list` to view all managed accounts.")
+		}
 	},
 }
 
-var walletLoadCmd = &cobra.Command{
-	Use:   "load",
-	Short: "Load an existing wallet",
+var walletListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List managed accounts",
 	Run: func(cmd *cobra.Command, args []string) {
-		wm := wallet.NewWalletManager()
-		if !wm.WalletExists() {
-			fmt.Printf("Wallet not found at %s\n", wm.GetWalletPath())
+		wm, err := wallet.NewWalletManager()
+		if err != nil {
+			fmt.Printf("Failed to initialize wallet manager: %v\n", err)
 			return
 		}
 
-		if err := wm.LoadWallet(); err != nil {
-			fmt.Printf("Failed to load wallet: %v\n", err)
+		accounts := wm.Accounts()
+		if len(accounts) == 0 {
+			fmt.Println("No accounts managed by OCF. Run `ocf wallet create` to generate one.")
 			return
 		}
-		fmt.Printf("Wallet loaded successfully\n")
-		fmt.Printf("Public Key: %s\n", wm.GetPublicKey())
+
+		for idx, account := range accounts {
+			prefix := " "
+			if idx == 0 {
+				prefix = "*"
+			}
+			fmt.Printf("%s [%d] %s (%s)\n", prefix, idx, account.PublicKey, account.Type)
+			fmt.Printf("    stored at: %s\n", account.FilePath)
+			fmt.Printf("    created:   %s\n", account.CreatedAt.Format(time.RFC3339))
+		}
 	},
 }
 
 var walletInfoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "Show wallet information",
+	Short: "Show the default account information",
 	Run: func(cmd *cobra.Command, args []string) {
-		wm := wallet.NewWalletManager()
-		if !wm.WalletExists() {
-			fmt.Printf("Wallet not found at %s\n", wm.GetWalletPath())
+		wm, err := wallet.NewWalletManager()
+		if err != nil {
+			fmt.Printf("Failed to initialize wallet manager: %v\n", err)
 			return
 		}
 
-		if err := wm.LoadWallet(); err != nil {
-			fmt.Printf("Failed to load wallet: %v\n", err)
+		account, err := wm.DefaultAccount()
+		if err != nil {
+			fmt.Println("No default account configured. Run `ocf wallet create` to create one.")
 			return
 		}
-		fmt.Printf("Wallet Path: %s\n", wm.GetWalletPath())
-		fmt.Printf("Public Key: %s\n", wm.GetPublicKey())
+
+		fmt.Printf("Default account: %s (%s)\n", account.PublicKey, account.Type)
+		fmt.Printf("Keypair stored at: %s\n", account.FilePath)
+		fmt.Printf("Created at: %s\n", account.CreatedAt.Format(time.RFC3339))
 	},
 }
 
 func init() {
 	walletCmd.AddCommand(walletCreateCmd)
-	walletCmd.AddCommand(walletLoadCmd)
+	walletCmd.AddCommand(walletListCmd)
 	walletCmd.AddCommand(walletInfoCmd)
 	rootcmd.AddCommand(walletCmd)
 }

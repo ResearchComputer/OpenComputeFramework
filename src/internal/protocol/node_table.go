@@ -227,7 +227,7 @@ func GetAllProviders(serviceName string) ([]Peer, error) {
 	return providers, nil
 }
 
-func InitializeMyself() {
+func InitializeMyself(ownerOverride string) {
 	host, _ := GetP2PNode(nil)
 	ctx := context.Background()
 	store, _ := GetCRDTStore()
@@ -240,18 +240,16 @@ func InitializeMyself() {
 	}
 
 	// Add wallet address as provider if available
-	if viper.IsSet("account.wallet") {
-		walletPath := viper.GetString("account.wallet")
-		if walletPath != "" {
-			wm := wallet.NewWalletManager()
-			if wm.WalletExists() {
-				if err := wm.LoadWallet(); err == nil {
-					myself.Owner = wm.GetPublicKey()
-					common.Logger.Infof("Added wallet address as provider: %s", myself.Owner)
-				} else {
-					common.Logger.Warnf("Failed to load wallet for provider address: %v", err)
-				}
-			}
+	if ownerOverride != "" {
+		myself.Owner = ownerOverride
+		common.Logger.Infof("Using verified wallet account for provider: %s", myself.Owner)
+	} else if account := viper.GetString("wallet.account"); account != "" {
+		myself.Owner = account
+		common.Logger.Infof("Using configured wallet account for provider: %s", myself.Owner)
+	} else if wm, err := wallet.InitializeWallet(); err == nil && wm.WalletExists() {
+		myself.Owner = wm.GetPublicKey()
+		if myself.Owner != "" {
+			common.Logger.Infof("Added wallet address as provider: %s", myself.Owner)
 		}
 	}
 

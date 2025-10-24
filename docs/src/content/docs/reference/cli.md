@@ -15,16 +15,17 @@ The released binaries are named by architecture (e.g., `ocf-amd64`). The CLI roo
 
 - **start**: Start the node and HTTP API.
 - **wallet**: Wallet management commands for node owner identification.
-  - **create**: Create a new wallet for node identification.
-  - **load**: Load an existing wallet.
-  - **info**: Show wallet information including public key.
+  - **create**: Generate a new Solana account managed by OCF.
+  - **list**: Display all accounts managed by OCF (default account marked with `*`).
+  - **info**: Show the default account information.
 - **version**: Print version information.
 - **init**: Initialize config (placeholder).
 - **update**: Update the node (placeholder).
 
 # Flags (start)
 
-- `--wallet.account` string: Wallet account for node identification.
+- `--wallet.account` string: Wallet account for node identification (defaults to the first managed account).
+- `--account.wallet` string: Path to the keypair file for the managed account (auto-populated when using managed wallets).
 - `--bootstrap.addr` string: Bootstrap source (HTTP URL returning `{"bootstraps": ["/ip4/x/tcp/43905/p2p/<ID>"]}` or a single multiaddr). Default: `http://152.67.71.5:8092/v1/dnt/bootstraps`.
 - `--seed` string: Seed for deterministic peer key (use `0` to persist/load key). Default: `0`.
 - `--mode` string: `standalone`, `local`, or `node`/`full` (default `node`).
@@ -34,6 +35,9 @@ The released binaries are named by architecture (e.g., `ocf-amd64`). The CLI roo
 - `--public-addr` string: Public IP address to advertise (enables bootstrap role).
 - `--service.name` string: Local service name to register (e.g., `llm`).
 - `--service.port` string: Local service port to register (e.g., `8080`).
+- `--solana.rpc` string: Solana RPC endpoint used for SPL token verification. Default: `https://api.mainnet-beta.solana.com`.
+- `--solana.mint` string: SPL token mint the node must hold (default `EsmcTrdLkFqV3mv4CjLF3AmCx132ixfFSYYRWD78cDzR`).
+- `--solana.skip_verification` bool: Skip SPL token balance checks (testing only). Default `false`.
 - `--cleanslate` bool: Remove local CRDT db on start. Default `true`.
 
 # Global Flags
@@ -76,23 +80,27 @@ Create a new wallet for node identification:
 ./ocf-amd64 wallet create
 ```
 
-Load an existing wallet:
+List managed wallets:
 
 ```bash
-./ocf-amd64 wallet load
+./ocf-amd64 wallet list
 ```
 
-Show wallet information:
+Show the default wallet information:
 
 ```bash
 ./ocf-amd64 wallet info
 ```
 
-Start a node with wallet identification:
+After creating a wallet, start the node (the CLI automatically wires the default account):
+
+```bash
+./ocf-amd64 start
+```
+
+To point at a different managed account, pass its public key explicitly:
 
 ```bash
 ./ocf-amd64 start --wallet.account=<wallet_address>
 ```
-
-
 

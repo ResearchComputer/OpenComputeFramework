@@ -2,151 +2,237 @@ package wallet
 
 import (
 	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/spf13/viper"
-	"ocf/internal/common"
+	"github.com/mr-tron/base58"
 )
 
-type WalletKey struct {
-	PublicKey  string `json:"public_key"`
-	PrivateKey string `json:"private_key"`
+const (
+	WalletTypeOCF    = "ocf"
+	WalletTypeSolana = "solana"
+
+	defaultAccountsFile = "accounts.json"
+	legacyWalletFile    = "wallet.json"
+	accountsDirName     = "accounts"
+)
+
+type Account struct {
+	Type      string    `json:"type"`
+	PublicKey string    `json:"public_key"`
+	Private   string    `json:"private_key"`
+	FilePath  string    `json:"file_path"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type WalletManager struct {
-	walletKey  *WalletKey
-	walletPath string
+	storageDir  string
+	storagePath string
+	accounts    []Account
 }
 
-func NewWalletManager() *WalletManager {
-	walletPath := viper.GetString("account.wallet")
-	if walletPath == "" {
-		homeDir, _ := os.UserHomeDir()
-		walletPath = filepath.Join(homeDir, ".ocf", "wallet.json")
-	}
-
-	return &WalletManager{
-		walletPath: walletPath,
-	}
-}
-
-func (wm *WalletManager) CreateWallet() error {
-	common.Logger.Info("Creating new wallet...")
-
-	pubKey, privKey, err := ed25519.GenerateKey(nil)
+func NewWalletManager() (*WalletManager, error) {
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return fmt.Errorf("failed to generate keypair: %w", err)
+		return nil, fmt.Errorf("unable to determine home directory: %w", err)
 	}
 
-	wm.walletKey = &WalletKey{
-		PublicKey:  base64.StdEncoding.EncodeToString(pubKey),
-		PrivateKey: base64.StdEncoding.EncodeToString(privKey),
+	baseDir := filepath.Join(homeDir, ".ocf")
+	if err := os.MkdirAll(baseDir, 0o700); err != nil {
+		return nil, fmt.Errorf("failed to ensure wallet directory: %w", err)
 	}
 
-	if err := wm.saveWallet(); err != nil {
-		return fmt.Errorf("failed to save wallet: %w", err)
+	manager := &WalletManager{
+		storageDir:  baseDir,
+		storagePath: filepath.Join(baseDir, defaultAccountsFile),
 	}
 
-	common.Logger.Infof("Wallet created successfully. Public key: %s", wm.walletKey.PublicKey)
+	if err := manager.loadAccounts(); err != nil {
+		return nil, err
+	}
+	return manager, nil
+}
+
+func (wm *WalletManager) loadAccounts() error {
+	data, err := os.ReadFile(wm.storagePath)
+	if errors.Is(err, os.ErrNotExist) {
+		wm.accounts = []Account{}
+		return wm.migrateLegacyWallet()
+	}
+	if err != nil {
+		return fmt.Errorf("failed to read accounts file: %w", err)
+	}
+
+	var payload struct {
+		Accounts []Account `json:"accounts"`
+	}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return fmt.Errorf("failed to parse accounts file: %w", err)
+	}
+
+	wm.accounts = payload.Accounts
 	return nil
 }
 
-func (wm *WalletManager) LoadWallet() error {
-	if _, err := os.Stat(wm.walletPath); os.IsNotExist(err) {
-		return fmt.Errorf("wallet file not found at %s", wm.walletPath)
+func (wm *WalletManager) migrateLegacyWallet() error {
+	legacyPath := filepath.Join(wm.storageDir, legacyWalletFile)
+	if _, err := os.Stat(legacyPath); errors.Is(err, os.ErrNotExist) {
+		return nil
 	}
-
-	data, err := os.ReadFile(wm.walletPath)
+	data, err := os.ReadFile(legacyPath)
 	if err != nil {
-		return fmt.Errorf("failed to read wallet file: %w", err)
+		return fmt.Errorf("failed to migrate legacy wallet: %w", err)
 	}
 
-	// For simplicity, we'll just store the private key as base64
-	privateKeyStr := string(data)
-	privateKeyBytes, err := base64.StdEncoding.DecodeString(privateKeyStr)
+	privateBytes, err := base64.StdEncoding.DecodeString(string(data))
 	if err != nil {
-		return fmt.Errorf("failed to decode private key: %w", err)
+		return fmt.Errorf("failed to decode legacy wallet: %w", err)
+	}
+	if len(privateBytes) != ed25519.PrivateKeySize {
+		return fmt.Errorf("legacy wallet has invalid size")
 	}
 
-	if len(privateKeyBytes) != ed25519.PrivateKeySize {
-		return fmt.Errorf("invalid private key size")
+	pub := ed25519.PrivateKey(privateBytes).Public().(ed25519.PublicKey)
+	account := Account{
+		Type:      WalletTypeOCF,
+		PublicKey: base64.StdEncoding.EncodeToString(pub),
+		Private:   base64.StdEncoding.EncodeToString(privateBytes),
+		FilePath:  legacyPath,
+		CreatedAt: time.Now().UTC(),
 	}
+	wm.accounts = append(wm.accounts, account)
+	return wm.saveAccounts()
+}
 
-	privKey := ed25519.PrivateKey(privateKeyBytes)
-	pubKey := privKey.Public().(ed25519.PublicKey)
-
-	wm.walletKey = &WalletKey{
-		PublicKey:  base64.StdEncoding.EncodeToString(pubKey),
-		PrivateKey: base64.StdEncoding.EncodeToString(privKey),
+func (wm *WalletManager) saveAccounts() error {
+	payload := struct {
+		Accounts []Account `json:"accounts"`
+	}{
+		Accounts: wm.accounts,
 	}
-
-	common.Logger.Infof("Wallet loaded successfully. Public key: %s", wm.walletKey.PublicKey)
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal accounts: %w", err)
+	}
+	if err := os.WriteFile(wm.storagePath, data, 0o600); err != nil {
+		return fmt.Errorf("failed to write accounts file: %w", err)
+	}
 	return nil
 }
 
-func (wm *WalletManager) saveWallet() error {
-	if wm.walletKey == nil {
-		return fmt.Errorf("no wallet to save")
+func (wm *WalletManager) Accounts() []Account {
+	out := make([]Account, len(wm.accounts))
+	copy(out, wm.accounts)
+	return out
+}
+
+func (wm *WalletManager) DefaultAccount() (Account, error) {
+	if len(wm.accounts) == 0 {
+		return Account{}, errors.New("no managed accounts")
+	}
+	return wm.accounts[0], nil
+}
+
+func (wm *WalletManager) AddSolanaAccount() (Account, error) {
+	public, private, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return Account{}, fmt.Errorf("failed to generate Solana keypair: %w", err)
 	}
 
-	walletDir := filepath.Dir(wm.walletPath)
-	if err := os.MkdirAll(walletDir, 0700); err != nil {
-		return fmt.Errorf("failed to create wallet directory: %w", err)
+	pub58 := base58.Encode(public)
+	accountDir := filepath.Join(wm.storageDir, accountsDirName, pub58)
+	if err := os.MkdirAll(accountDir, 0o700); err != nil {
+		return Account{}, fmt.Errorf("failed to create account directory: %w", err)
 	}
 
-	if err := os.WriteFile(wm.walletPath, []byte(wm.walletKey.PrivateKey), 0600); err != nil {
-		return fmt.Errorf("failed to write wallet file: %w", err)
+	keypairPath := filepath.Join(accountDir, "keypair.json")
+	if err := writeSolanaKeypair(keypairPath, private); err != nil {
+		return Account{}, err
 	}
 
+	account := Account{
+		Type:      WalletTypeSolana,
+		PublicKey: pub58,
+		Private:   base64.StdEncoding.EncodeToString(private),
+		FilePath:  keypairPath,
+		CreatedAt: time.Now().UTC(),
+	}
+	wm.accounts = append(wm.accounts, account)
+	if err := wm.saveAccounts(); err != nil {
+		return Account{}, err
+	}
+	return account, nil
+}
+
+func writeSolanaKeypair(path string, private ed25519.PrivateKey) error {
+	keyInts := make([]int, len(private))
+	for i, b := range private {
+		keyInts[i] = int(b)
+	}
+	data, err := json.MarshalIndent(keyInts, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to encode Solana keypair: %w", err)
+	}
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		return fmt.Errorf("failed to write Solana keypair: %w", err)
+	}
 	return nil
 }
 
-func (wm *WalletManager) GetPublicKey() string {
-	if wm.walletKey == nil {
-		return ""
+func (wm *WalletManager) FindByFile(path string) (Account, bool) {
+	for _, acc := range wm.accounts {
+		if acc.FilePath == path {
+			return acc, true
+		}
 	}
-	return wm.walletKey.PublicKey
-}
-
-func (wm *WalletManager) GetPrivateKey() string {
-	if wm.walletKey == nil {
-		return ""
-	}
-	return wm.walletKey.PrivateKey
-}
-
-func (wm *WalletManager) GetWalletPath() string {
-	return wm.walletPath
+	return Account{}, false
 }
 
 func (wm *WalletManager) WalletExists() bool {
-	_, err := os.Stat(wm.walletPath)
-	return !os.IsNotExist(err)
+	return len(wm.accounts) > 0
 }
 
-func (wm *WalletManager) Initialize() error {
-	if wm.WalletExists() {
-		if err := wm.LoadWallet(); err != nil {
-			common.Logger.Warnf("Failed to load existing wallet: %v", err)
-			if err := wm.CreateWallet(); err != nil {
-				return fmt.Errorf("failed to create new wallet after load failure: %w", err)
-			}
-		}
-	} else {
-		if err := wm.CreateWallet(); err != nil {
-			return fmt.Errorf("failed to create new wallet: %w", err)
-		}
+func (wm *WalletManager) GetPublicKey() string {
+	if acc, err := wm.DefaultAccount(); err == nil {
+		return acc.PublicKey
 	}
-	return nil
+	return ""
+}
+
+func (wm *WalletManager) GetPrivateKey() string {
+	if acc, err := wm.DefaultAccount(); err == nil {
+		return acc.Private
+	}
+	return ""
+}
+
+func (wm *WalletManager) GetWalletPath() string {
+	if acc, err := wm.DefaultAccount(); err == nil {
+		return acc.FilePath
+	}
+	return ""
+}
+
+func (wm *WalletManager) GetWalletType() string {
+	if acc, err := wm.DefaultAccount(); err == nil {
+		return acc.Type
+	}
+	return ""
 }
 
 func InitializeWallet() (*WalletManager, error) {
-	wm := NewWalletManager()
-	if err := wm.Initialize(); err != nil {
+	wm, err := NewWalletManager()
+	if err != nil {
 		return nil, err
+	}
+	if !wm.WalletExists() {
+		return nil, errors.New("no managed wallets found; run `ocf wallet create` to generate a Solana account")
 	}
 	return wm, nil
 }
