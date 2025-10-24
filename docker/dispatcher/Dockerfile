@@ -1,11 +1,15 @@
-FROM alpine:edge
+FROM ubuntu:22.04
 
 ARG VERSION
 ARG TARGETPLATFORM
 
 WORKDIR /app
 
-RUN apk --no-cache add ca-certificates tzdata curl && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    tzdata \
+    curl && \
     case "$TARGETPLATFORM" in \
       "linux/arm64")  URL="https://github.com/ResearchComputer/OpenComputeFramework/releases/download/${VERSION}/ocf-arm64" ;; \
       *) URL="https://github.com/ResearchComputer/OpenComputeFramework/releases/download/${VERSION}/ocf-amd64" ;; \
