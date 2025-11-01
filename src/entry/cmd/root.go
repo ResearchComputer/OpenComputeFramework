@@ -57,6 +57,10 @@ func init() {
 func initConfig(cmd *cobra.Command) error {
 	var home string
 	var err error
+
+	viper.SetDefault("crdt.tombstone_retention", "24h")
+	viper.SetDefault("crdt.tombstone_compaction_interval", "1h")
+	viper.SetDefault("crdt.tombstone_compaction_batch", 512)
 	// Don't forget to read config either from cfgFile or from home directory!
 	if cfgFile != "" {
 		// Use config file from the flag.

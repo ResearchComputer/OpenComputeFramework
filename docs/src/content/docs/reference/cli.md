@@ -40,6 +40,14 @@ The released binaries are named by architecture (e.g., `ocf-amd64`). The CLI roo
 - `--solana.skip_verification` bool: Skip SPL token balance checks (testing only). Default `false`.
 - `--cleanslate` bool: Remove local CRDT db on start. Default `true`.
 
+# CRDT Maintenance
+
+Tombstone compaction prevents the on-disk CRDT datastore from growing indefinitely as peers churn. Configure the compactor via the config file (`$HOME/.config/ocf/cfg.yaml`) or environment variables:
+
+- `crdt.tombstone_retention` (duration, default `24h`): How long to retain tombstones before they become eligible for compaction. Set to `0` to disable compaction.
+- `crdt.tombstone_compaction_interval` (duration, default `1h`): How frequently to attempt compaction.
+- `crdt.tombstone_compaction_batch` (int, default `512`): Maximum number of tombstone records removed per run.
+
 # Global Flags
 
 - `--config` string: Config file path (default is `$HOME/.config/ocf/cfg.yaml`).
@@ -103,4 +111,3 @@ To point at a different managed account, pass its public key explicitly:
 ```bash
 ./ocf-amd64 start --wallet.account=<wallet_address>
 ```
-

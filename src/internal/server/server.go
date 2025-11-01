@@ -87,6 +87,16 @@ func StartServer() {
 	r := gin.Default()
 	r.Use(corsHeader())
 	r.Use(gin.Recovery())
+	// Initialize OpenAPI/Swagger documentation
+	r.GET("/openapi.yaml", func(c *gin.Context) {
+		c.Header("Content-Type", "application/yaml")
+		c.File("./internal/server/openapi.yaml")
+	})
+	r.GET("/swagger", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "swagger.html", gin.H{
+			"openapiUrl": "/openapi.yaml",
+		})
+	})
 
 	go protocol.StartTicker()
 	subProcess := viper.GetString("subprocess")
