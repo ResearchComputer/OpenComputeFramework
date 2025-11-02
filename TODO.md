@@ -10,7 +10,7 @@
 
 - [ ] **P2P Network Resilience**
   - Implement peer scoring and reputation system to prioritize connections with reliable nodes
-  - Add automatic reconnection logic with exponential backoff for transient network failures
+  - [x] Add automatic reconnection logic with exponential backoff for transient network failures
   - Implement connection rate limiting to prevent DDoS or misbehaving peers
   - Add support for rendezvous servers for NAT traversal in restrictive networks
 
