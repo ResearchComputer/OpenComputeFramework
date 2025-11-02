@@ -26,7 +26,9 @@ The released binaries are named by architecture (e.g., `ocf-amd64`). The CLI roo
 
 - `--wallet.account` string: Wallet account for node identification (defaults to the first managed account).
 - `--account.wallet` string: Path to the keypair file for the managed account (auto-populated when using managed wallets).
-- `--bootstrap.addr` string: Bootstrap source (HTTP URL returning `{"bootstraps": ["/ip4/x/tcp/43905/p2p/<ID>"]}` or a single multiaddr). Default: `http://152.67.71.5:8092/v1/dnt/bootstraps`.
+- `--bootstrap.addr` string: Legacy single-source bootstrap value (HTTP URL or one multiaddr). Default: `http://152.67.71.5:8092/v1/dnt/bootstraps`.
+- `--bootstrap.source` stringSlice: Ordered bootstrap sources (HTTP URL, `dnsaddr://host`, or multiaddr). Repeat the flag to add more entries.
+- `--bootstrap.static` stringSlice: Static bootstrap multiaddrs that are appended after dynamic sources.
 - `--seed` string: Seed for deterministic peer key (use `0` to persist/load key). Default: `0`.
 - `--mode` string: `standalone`, `local`, or `node`/`full` (default `node`).
 - `--tcpport` string: LibP2P TCP port. Default `43905`.
@@ -64,6 +66,15 @@ Start a node using a known bootstrap multiaddr:
 
 ```bash
 ./ocf-amd64 start --bootstrap.addr=/ip4/1.2.3.4/tcp/43905/p2p/<BOOTSTRAP_PEER_ID>
+```
+
+Start a node with fallback bootstrap sources:
+
+```bash
+./ocf-amd64 start \
+  --bootstrap.source=https://bootstrap.ocf.example.com/v1/dnt/bootstraps \
+  --bootstrap.source=dnsaddr://bootstrap.ocf.example.com \
+  --bootstrap.static=/ip4/198.51.100.10/tcp/43905/p2p/<BOOTSTRAP_PEER_ID>
 ```
 
 Advertise as a public bootstrap:

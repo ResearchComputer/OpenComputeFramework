@@ -16,7 +16,7 @@
 
 - [ ] **Bootstrap Discovery Enhancements**
   - Implement DNS-based bootstrap discovery (e.g., `_ocf-bootstrap._tcp.example.com`)
-  - Add support for multiple bootstrap sources (HTTP, DNS, static list) with fallback logic
+  - [x] Add support for multiple bootstrap sources (HTTP, DNS, static list) with fallback logic
   - Implement bootstrap node validation to prevent malicious bootstrap lists
   - Add bootstrap node rotation and load balancing for high availability
 

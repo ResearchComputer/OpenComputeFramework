@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -36,6 +37,8 @@ func init() {
 	startCmd.Flags().String("wallet.account", "", "wallet account")
 	startCmd.Flags().String("account.wallet", "", "path to wallet key file")
 	startCmd.Flags().String("bootstrap.addr", "http://152.67.71.5:8092/v1/dnt/bootstraps", "bootstrap address")
+	startCmd.Flags().StringSlice("bootstrap.source", nil, "bootstrap source (HTTP URL, dnsaddr://host, or multiaddr). Repeatable")
+	startCmd.Flags().StringSlice("bootstrap.static", nil, "static bootstrap multiaddr (repeatable)")
 	startCmd.Flags().String("seed", "0", "Seed")
 	startCmd.Flags().String("mode", "node", "Mode (standalone, local, full)")
 	startCmd.Flags().String("tcpport", "43905", "TCP Port")
@@ -123,6 +126,12 @@ func initConfig(cmd *cobra.Command) error {
 					viper.Set(flag.Name, flag.Value)
 				} else {
 					viper.Set(flag.Name, value)
+				}
+			case "stringSlice", "stringArray":
+				if sliceValue, ok := flag.Value.(pflag.SliceValue); ok {
+					viper.Set(flag.Name, sliceValue.GetSlice())
+				} else {
+					viper.Set(flag.Name, strings.Split(flag.Value.String(), ","))
 				}
 			default:
 				viper.Set(flag.Name, flag.Value)
